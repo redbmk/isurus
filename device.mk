@@ -14,12 +14,12 @@
 # limitations under the License.
 #
 
-# This file includes all definitions that apply to ALL mako devices, and
-# are also specific to mako devices
+# This file includes all definitions that apply to ALL isurus devices, and
+# are also specific to isurus devices
 #
 # Everything in this directory will become public
 
-DEVICE_PACKAGE_OVERLAYS := device/lge/mako/overlay
+DEVICE_PACKAGE_OVERLAYS := device/lge/isurus/overlay
 
 # This device is xhdpi.  However the platform doesn't
 # currently contain all of the bitmaps at xhdpi density so
@@ -29,7 +29,7 @@ PRODUCT_AAPT_CONFIG := normal hdpi xhdpi
 PRODUCT_AAPT_PREF_CONFIG := xhdpi
 
 PRODUCT_PACKAGES := \
-	lights.mako
+	lights.isurus
 
 PRODUCT_PACKAGES += \
     charger_res_images \
@@ -43,42 +43,42 @@ PRODUCT_PACKAGES += \
         librs_jni
 
 PRODUCT_COPY_FILES += \
-	device/lge/mako/WCNSS_cfg.dat:system/vendor/firmware/wlan/prima/WCNSS_cfg.dat \
-	device/lge/mako/WCNSS_qcom_cfg.ini:system/etc/wifi/WCNSS_qcom_cfg.ini \
-	device/lge/mako/WCNSS_qcom_wlan_nv.bin:system/etc/wifi/WCNSS_qcom_wlan_nv.bin
+	device/lge/isurus/WCNSS_cfg.dat:system/vendor/firmware/wlan/prima/WCNSS_cfg.dat \
+	device/lge/isurus/WCNSS_qcom_cfg.ini:system/etc/wifi/WCNSS_qcom_cfg.ini \
+	device/lge/isurus/WCNSS_qcom_wlan_nv.bin:system/etc/wifi/WCNSS_qcom_wlan_nv.bin
 
 PRODUCT_COPY_FILES += \
-	device/lge/mako/snd_soc_msm_2x_Fusion3:system/etc/snd_soc_msm/snd_soc_msm_2x_Fusion3 \
-	device/lge/mako/audio_policy.conf:system/etc/audio_policy.conf
+	device/lge/isurus/snd_soc_msm_2x_Fusion3:system/etc/snd_soc_msm/snd_soc_msm_2x_Fusion3 \
+	device/lge/isurus/audio_policy.conf:system/etc/audio_policy.conf
 
 PRODUCT_COPY_FILES += \
-	device/lge/mako/thermald-mako.conf:system/etc/thermald.conf
+	device/lge/isurus/thermald-isurus.conf:system/etc/thermald.conf
 
 PRODUCT_COPY_FILES += \
-	device/lge/mako/init.mako.rc:root/init.mako.rc \
-	device/lge/mako/init.mako.usb.rc:root/init.mako.usb.rc \
-	device/lge/mako/fstab.mako:root/fstab.mako \
-	device/lge/mako/ueventd.mako.rc:root/ueventd.mako.rc \
-	device/lge/mako/media_profiles.xml:system/etc/media_profiles.xml \
-	device/lge/mako/media_codecs.xml:system/etc/media_codecs.xml
+	device/lge/isurus/init.isurus.rc:root/init.isurus.rc \
+	device/lge/isurus/init.isurus.usb.rc:root/init.isurus.usb.rc \
+	device/lge/isurus/fstab.isurus:root/fstab.isurus \
+	device/lge/isurus/ueventd.isurus.rc:root/ueventd.isurus.rc \
+	device/lge/isurus/media_profiles.xml:system/etc/media_profiles.xml \
+	device/lge/isurus/media_codecs.xml:system/etc/media_codecs.xml
 
 PRODUCT_COPY_FILES += \
-	device/lge/mako/kickstart_checker.sh:system/etc/kickstart_checker.sh
+	device/lge/isurus/kickstart_checker.sh:system/etc/kickstart_checker.sh
 
 # Prebuilt kl and kcm keymaps
 PRODUCT_COPY_FILES += \
-	device/lge/mako/apq8064-tabla-snd-card_Button_Jack.kl:system/usr/keylayout/apq8064-tabla-snd-card_Button_Jack.kl \
-	device/lge/mako/hs_detect.kl:system/usr/keylayout/hs_detect.kl \
-	device/lge/mako/pmic8xxx_pwrkey.kl:system/usr/keylayout/pmic8xxx_pwrkey.kl \
-	device/lge/mako/keypad_8064.kl:system/usr/keylayout/keypad_8064.kl \
-	device/lge/mako/apq8064-tabla-snd-card_Button_Jack.kcm:system/usr/keychars/apq8064-tabla-snd-card_Button_Jack.kcm \
-	device/lge/mako/hs_detect.kcm:system/usr/keychars/hs_detect.kcm \
-	device/lge/mako/keypad_8064.kcm:system/usr/keychars/keypad_8064.kcm \
-	device/lge/mako/pmic8xxx_pwrkey.kcm:system/usr/keychars/pmic8xxx_pwrkey.kcm
+	device/lge/isurus/apq8064-tabla-snd-card_Button_Jack.kl:system/usr/keylayout/apq8064-tabla-snd-card_Button_Jack.kl \
+	device/lge/isurus/hs_detect.kl:system/usr/keylayout/hs_detect.kl \
+	device/lge/isurus/pmic8xxx_pwrkey.kl:system/usr/keylayout/pmic8xxx_pwrkey.kl \
+	device/lge/isurus/keypad_8064.kl:system/usr/keylayout/keypad_8064.kl \
+	device/lge/isurus/apq8064-tabla-snd-card_Button_Jack.kcm:system/usr/keychars/apq8064-tabla-snd-card_Button_Jack.kcm \
+	device/lge/isurus/hs_detect.kcm:system/usr/keychars/hs_detect.kcm \
+	device/lge/isurus/keypad_8064.kcm:system/usr/keychars/keypad_8064.kcm \
+	device/lge/isurus/pmic8xxx_pwrkey.kcm:system/usr/keychars/pmic8xxx_pwrkey.kcm
 
 # Prebuilt input device calibration files
 PRODUCT_COPY_FILES += \
-	device/lge/mako/touch_dev.idc:system/usr/idc/touch_dev.idc
+	device/lge/isurus/touch_dev.idc:system/usr/idc/touch_dev.idc
 
 # These are the hardware-specific features
 PRODUCT_COPY_FILES += \
@@ -100,22 +100,22 @@ PRODUCT_COPY_FILES += \
 
 # GPS configuration
 PRODUCT_COPY_FILES += \
-	device/lge/mako/gps.conf:system/etc/gps.conf
+	device/lge/isurus/gps.conf:system/etc/gps.conf
 
 # NFC packages
 PRODUCT_PACKAGES += \
     libnfc-nci \
     libnfc_nci_jni \
-    nfc_nci.mako \
+    nfc_nci.isurus \
     NfcNci \
     Tag \
     com.android.nfc_extras
 
 # NFCEE access control
 ifeq ($(TARGET_BUILD_VARIANT),user)
-    NFCEE_ACCESS_PATH := device/lge/mako/nfc/nfcee_access.xml
+    NFCEE_ACCESS_PATH := device/lge/isurus/nfc/nfcee_access.xml
 else
-    NFCEE_ACCESS_PATH := device/lge/mako/nfc/nfcee_access_debug.xml
+    NFCEE_ACCESS_PATH := device/lge/isurus/nfc/nfcee_access_debug.xml
 endif
 
 # NFC access control + feature files + configuration
@@ -123,7 +123,7 @@ PRODUCT_COPY_FILES += \
     $(NFCEE_ACCESS_PATH):system/etc/nfcee_access.xml \
     frameworks/native/data/etc/com.android.nfc_extras.xml:system/etc/permissions/com.android.nfc_extras.xml \
     frameworks/native/data/etc/android.hardware.nfc.xml:system/etc/permissions/android.hardware.nfc.xml \
-    device/lge/mako/nfc/libnfc-brcm.conf:system/etc/libnfc-brcm.conf
+    device/lge/isurus/nfc/libnfc-brcm.conf:system/etc/libnfc-brcm.conf
 
 PRODUCT_PROPERTY_OVERRIDES += \
 	ro.opengles.version=131072
@@ -185,13 +185,13 @@ PRODUCT_PACKAGES += \
 	power.msm8960
 
 PRODUCT_COPY_FILES += \
-	device/lge/mako/init.mako.bt.sh:system/etc/init.mako.bt.sh
+	device/lge/isurus/init.isurus.bt.sh:system/etc/init.isurus.bt.sh
 
 PRODUCT_PROPERTY_OVERRIDES += \
 	ro.qualcomm.bt.hci_transport=smd
 
 PRODUCT_PACKAGES += \
-	camera.mako \
+	camera.isurus \
 	camera.msm8960 \
 	libmmcamera_interface2 \
 	libmmcamera_interface
@@ -250,5 +250,5 @@ PRODUCT_COPY_FILES += \
 
 $(call inherit-product, frameworks/native/build/phone-xhdpi-2048-dalvik-heap.mk)
 
-# This is the mako-specific audio package
+# This is the isurus-specific audio package
 $(call inherit-product, frameworks/base/data/sounds/AudioPackage10.mk)

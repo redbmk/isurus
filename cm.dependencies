@@ -1,7 +1,7 @@
 [
  {
-   "repository": "lge-kernel-mako",
-   "target_path": "kernel/lge/mako",
+   "repository": "lge-kernel-isurus",
+   "target_path": "kernel/lge/isurus",
    "branch": "jellybean"
  }
 ]

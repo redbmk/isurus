@@ -12,16 +12,16 @@ $(call inherit-product, vendor/cm/config/common_full_phone.mk)
 $(call inherit-product, vendor/cm/config/nfc_enhanced.mk)
 
 # Inherit device configuration
-$(call inherit-product, device/lge/mako/full_mako.mk)
+$(call inherit-product, device/lge/isurus/full_isurus.mk)
 
 ## Device identifier. This must come after all inclusions
-PRODUCT_DEVICE := mako
-PRODUCT_NAME := cm_mako
+PRODUCT_DEVICE := isurus
+PRODUCT_NAME := cm_isurus
 PRODUCT_BRAND := Google
-PRODUCT_MODEL := Nexus 4
+PRODUCT_MODEL := Sprint Optimus G
 PRODUCT_MANUFACTURER := LGE
 
-PRODUCT_BUILD_PROP_OVERRIDES += PRODUCT_NAME=occam BUILD_FINGERPRINT=google/occam/mako:4.2.2/JDQ39/573038:user/release-keys PRIVATE_BUILD_DESC="occam-user 4.2.2 JDQ39 573038 release-keys"
+PRODUCT_BUILD_PROP_OVERRIDES += PRODUCT_NAME=lamnidae BUILD_FINGERPRINT=google/lamnidae/isurus:4.2.2/JDQ39/573038:user/release-keys PRIVATE_BUILD_DESC="lamnidae-user 4.2.2 JDQ39 573038 release-keys"
 
 # Enable Torch
 PRODUCT_PACKAGES += Torch
