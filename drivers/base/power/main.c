@@ -1009,10 +1009,14 @@ int dpm_suspend_end(pm_message_t state)
 	int error = dpm_suspend_late(state);
 	if (error)
 		return error;
+
 	error = dpm_suspend_noirq(state);
-	if (error)
-		dpm_resume_early(resume_event(state));
-	return error;
+	if (error) {
+		dpm_resume_early(state);
+		return error;
+	}
+
+	return 0;
 }
 EXPORT_SYMBOL_GPL(dpm_suspend_end);
 
@@ -1056,7 +1060,6 @@ static int __device_suspend(struct device *dev, pm_message_t state, bool async)
 
 	if (async_error)
 		goto Complete;
-
 	/*
 	 * If a device configured to wake up the system from sleep states
 	 * has been suspended at run time and there's a resume request pending
@@ -1137,7 +1140,7 @@ static int __device_suspend(struct device *dev, pm_message_t state, bool async)
 	del_timer_sync(&timer);
 	destroy_timer_on_stack(&timer);
 
- Complete:
+Complete:
 	complete_all(&dev->power.completion);
 
 	if (error)
@@ -1273,13 +1276,6 @@ static int device_prepare(struct device *dev, pm_message_t state)
 	}
 
 	device_unlock(dev);
-
-	/*
-	 * If failed prepare, should allow runtime suspend again because
-	 * the complete phase of this device is never invoked
-	 */
-	if (error)
-		pm_runtime_put_sync(dev);
 
 	return error;
 }

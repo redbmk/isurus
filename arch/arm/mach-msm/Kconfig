@@ -177,6 +177,7 @@ config ARCH_MSM8960
 	select ARM_HAS_SG_CHAIN
 	select MSM_KRAIT_WFE_FIXUP
 	select MSM_IOMMU_GPU_SYNC
+	select MSM_CPU_PWRCTL
 
 config ARCH_MSM8930
 	bool "MSM8930"
@@ -210,6 +211,7 @@ config ARCH_MSM8930
 	select ARM_HAS_SG_CHAIN
 	select MSM_KRAIT_WFE_FIXUP
 	select MSM_IOMMU_GPU_SYNC
+	select MSM_CPU_PWRCTL
 
 config ARCH_APQ8064
 	bool "APQ8064"
@@ -238,9 +240,49 @@ config ARCH_APQ8064
 	select ARM_HAS_SG_CHAIN
 	select MSM_KRAIT_WFE_FIXUP
 	select MSM_IOMMU_GPU_SYNC
+	select MSM_CPU_PWRCTL
 
 config ARCH_MSM8974
 	bool "MSM8974"
+	select ARCH_MSM_KRAITMP
+	select GPIO_MSM_V3
+	select ARM_GIC
+	select CPU_V7
+	select MSM_SCM if SMP
+	select MSM_GPIOMUX
+	select MULTI_IRQ_HANDLER
+	select MSM_MULTIMEDIA_USE_ION
+	select MSM_PIL
+	select MSM_SPM_V2
+	select MSM_L2_SPM
+	select MSM_NATIVE_RESTART
+	select MSM_RESTART_V2
+	select MSM_PM8X60 if PM
+	select MAY_HAVE_SPARSE_IRQ
+	select SPARSE_IRQ
+	select MSM_RPM_SMD
+	select REGULATOR
+	select MSM_QDSP6_APRV2
+	select MSM_QDSP6V2_CODECS
+	select MSM_AUDIO_QDSP6V2 if SND_SOC
+	select MSM_RPM_REGULATOR_SMD
+	select ARM_HAS_SG_CHAIN
+	select MSM_RUN_QUEUE_STATS
+
+config ARCH_MPQ8092
+	bool "MPQ8092"
+	select ARCH_MSM_KRAITMP
+	select GPIO_MSM_V3
+	select ARM_GIC
+	select MULTI_IRQ_HANDLER
+	select CPU_V7
+	select MSM_GPIOMUX
+	select MAY_HAVE_SPARSE_IRQ
+	select SPARSE_IRQ
+	select MSM_NOPM
+
+config ARCH_MSM8226
+	bool "MSM8226"
 	select ARCH_MSM_KRAITMP
 	select GPIO_MSM_V3
 	select ARM_GIC
@@ -262,7 +304,6 @@ config ARCH_MSM8974
 	select MSM_AUDIO_QDSP6V2 if SND_SOC
 	select MSM_RPM_REGULATOR_SMD
 	select ARM_HAS_SG_CHAIN
-	select MSM_RUN_QUEUE_STATS
 
 config ARCH_FSM9XXX
 	bool "FSM9XXX"
@@ -308,6 +349,7 @@ config ARCH_MSM8625
 	select ARM_TICKET_LOCKS
 	select MSM_RUN_QUEUE_STATS
 	select MIGHT_HAVE_CACHE_L2X0
+	select ARM_HAS_SG_CHAIN
 
 config ARCH_MSM9625
 	bool "MSM9625"
@@ -321,7 +363,6 @@ config ARCH_MSM9625
 	select MSM_GPIOMUX
 	select MULTI_IRQ_HANDLER
 	select GPIO_MSM_V3
-
 endmenu
 
 choice
@@ -373,6 +414,7 @@ config  ARCH_MSM_KRAITMP
 	select ARCH_MSM_KRAIT
 	select MSM_SMP
 	select HAVE_ARCH_HAS_CURRENT_TIMER
+	select MSM_JTAG if MSM_QDSS
 	bool
 	select HAVE_HW_BRKPT_RESERVED_RW_ACCESS
 
@@ -381,6 +423,9 @@ config  ARCH_MSM_CORTEXMP
 	bool
 
 config  MSM_KRAIT_WFE_FIXUP
+	bool
+
+config  MSM_RESTART_V2
 	bool
 
 config  ARCH_MSM_CORTEX_A5
@@ -395,6 +440,7 @@ config ARCH_MSM7X27A
 	select ARM_GIC
 	select ARCH_MSM_CORTEXMP
 	select MIGHT_HAVE_CACHE_L2X0
+	select ARM_HAS_SG_CHAIN
 
 config  MSM_VIC
 	bool
@@ -867,13 +913,9 @@ config MACH_FSM9XXX_SURF
 	  chipset based SURF evaluation board and
 	  FFA board.
 
-config MACH_MSM_DUMMY
-	bool "NONE (No device)"
-
 endmenu
 
 source "arch/arm/mach-msm/lge/Kconfig"
-
 config MSM_STACKED_MEMORY
 	bool "Stacked Memory"
 	default y
@@ -889,6 +931,8 @@ config PHYS_OFFSET
 	default "0x80200000" if ARCH_MSM8960
 	default "0x80200000" if ARCH_MSM8930
 	default "0x00000000" if ARCH_MSM8974
+	default "0x00000000" if ARCH_MPQ8092
+	default "0x00000000" if ARCH_MSM8226
 	default "0x10000000" if ARCH_FSM9XXX
 	default "0x20200000" if ARCH_MSM9625
 	default "0x00200000" if !MSM_STACKED_MEMORY
@@ -1028,6 +1072,14 @@ choice
 		help
 		  Say Y here if you want the debug print routines to direct
 		  their output to the serial port on MSM 8974 devices.
+
+	config DEBUG_MPQ8092_UART
+                bool "Kernel low-level debugging messages via MPQ8092 UART"
+                depends on ARCH_MPQ8092
+                select MSM_HAS_DEBUG_UART_HS_V14
+                help
+                  Say Y here if you want the debug print routines to direct
+                  their output to the serial port on MPQ8092 devices.
 endchoice
 
 choice
@@ -1837,6 +1889,24 @@ config MSM_RPM_REGULATOR_SMD
 	  be used on systems which contain an RPM which communicates with the
 	  application processor over SMD.
 
+config MSM_SUBSYSTEM_RESTART
+	bool "MSM Subsystem Restart"
+	help
+	  This option enables the MSM subsystem restart framework.
+
+	  The MSM subsystem restart framework provides support to boot,
+	  shutdown, and restart subsystems with a reference counted API.
+	  It also notifies userspace of transitions between these states via
+	  sysfs.
+
+config MSM_SYSMON_COMM
+	bool "MSM System Monitor communication support"
+	depends on MSM_SMD && MSM_SUBSYSTEM_RESTART
+	help
+	  This option adds support for MSM System Monitor library, which
+	  provides an API that may be used for notifying subsystems within
+	  the SoC about other subsystems' power-up/down state-changes.
+
 config MSM_PIL
 	bool "Peripheral image loading"
 	select FW_LOADER
@@ -1948,23 +2018,6 @@ config MSM_SCM
 	bool "Secure Channel Manager (SCM) support"
 	default n
 
-config MSM_SUBSYSTEM_RESTART
-	bool "MSM Subsystem Restart Driver"
-	depends on (ARCH_MSM8X60 || ARCH_MSM8960 || ARCH_MSM9615)
-	default n
-	help
-	  This option enables the MSM subsystem restart driver, which provides
-	  a framework to handle subsystem crashes.
-
-config MSM_SYSMON_COMM
-	bool "MSM System Monitor communication support"
-	depends on MSM_SMD && MSM_SUBSYSTEM_RESTART
-	default y
-	help
-	  This option adds support for MSM System Monitor library, which
-	  provides an API that may be used for notifying subsystems within
-	  the SoC about other subsystems' power-up/down state-changes.
-
 config MSM_MODEM_8960
 	bool "MSM 8960 Modem driver"
 	depends on (ARCH_MSM8960 || ARCH_MSM9615)
@@ -1983,8 +2036,7 @@ config MSM_LPASS_8960
 
 config MSM_WCNSS_SSR_8960
 	tristate "MSM 8960 WCNSS restart module"
-	depends on ARCH_MSM8960
-	depends on WCNSS_CORE
+	depends on (ARCH_MSM8960)
 	help
 	 This option enables the WCNSS restart module for MSM8960, which
 	 monitors WCNSS hardware watchdog interrupt lines and plugs WCNSS
@@ -1997,6 +2049,24 @@ config MSM_GSS_SSR_8064
 	 This option enables the gps subsystem restart driver for APQ8064, which monitors
 	 gss hardware watchdog interrupt lines and plugs into the subsystem
 	 restart and PIL drivers.
+
+config MSM_MODEM_SSR_8974
+	bool "MSM 8974 Modem restart driver"
+	depends on (ARCH_MSM8974)
+	help
+	 This option enables the modem subsystem restart driver for the MSM8974.
+	 It monitors the modem SMSM status bits and the modem watchdog line and
+	 restarts the modem or the 8974 when the modem encounters a fatal error,
+	 depending on the restart level selected in the subsystem restart driver.
+
+config MSM_ADSP_SSR_8974
+	bool "MSM 8974 adsp restart driver"
+	depends on (ARCH_MSM8974)
+	help
+	 This option enables the adsp restart driver for the MSM8974.
+	 It monitors the adsp SMSM status bits and the adsp watchdog line and
+	 restarts the adsp or the 8974 when the adsp encounters a fatal error,
+	 depending on the restart level selected in the subsystem restart driver.
 
 config SCORPION_Uni_45nm_BUG
 	bool "Scorpion Uni 45nm(SC45U): Workaround for ICIMVAU and BPIMVA"
@@ -2088,6 +2158,14 @@ config MSM_PM8X60
 	depends on PM
 	bool
 
+config MSM_EVENT_TIMER
+	bool "Event timer"
+	help
+		This option enables a modules that manages a list of event timers that
+		need to be monitored by the PM. The enables the PM code to monitor
+		events that require the core to be awake and ready to handle the
+		event.
+
 config MSM_NOPM
 	default y if !PM
 	bool
@@ -2127,7 +2205,7 @@ config MSM_MEMORY_DUMP
 
 config MSM_DLOAD_MODE
 	bool "Enable download mode on crashes"
-	depends on ARCH_MSM8X60 || ARCH_MSM8960 || ARCH_MSM9615
+	depends on ARCH_MSM8X60 || ARCH_MSM8960 || ARCH_MSM9615 || ARCH_MSM8974
 	default n
 	help
 		This makes the SoC enter download mode when it resets
@@ -2137,7 +2215,6 @@ config MSM_DLOAD_MODE
 
 config MSM_JTAG
 	bool "JTAG and kernel debug and trace support across power collapse"
-	default n
 	help
 	  Enables support for kernel debugging (specifically breakpoints) and
 	  processor tracing across power collapse both for JTag and OS hosted
@@ -2150,6 +2227,7 @@ config MSM_JTAG
 config MSM_ETM
 	tristate "Enable MSM ETM and ETB"
 	depends on ARCH_MSM8X60
+	select MSM_JTAG
 	help
 	  Enables embedded trace collection on MSM8660
 
@@ -2353,6 +2431,16 @@ config MSM_OCMEM_DEBUG
 	  Choosing one of these options allows debugging of each
 	  individual subsystem separately.
 
+config MSM_OCMEM_NONSECURE
+	bool "OCMEM Non Secure Mode"
+	depends on MSM_OCMEM_DEBUG
+	help
+	  Disable OCMEM interaction with secure processor.
+	  By default OCMEM is secured and accesses for each master
+	  is requested by the OCMEM driver. Selecting this option
+	  causes the OCMEM memory to be in non-secure state unless
+	  its locked down by the secure processor.
+
 config MSM_OCMEM_POWER_DEBUG
 	bool "OCMEM Power Debug Support"
 	depends on MSM_OCMEM_DEBUG
@@ -2418,6 +2506,21 @@ config MSM_L1_ERR_PANIC
 	  instability is suspected.
 
 	  For production builds, you should probably say 'N' here.
+
+config MSM_L1_RECOV_ERR_PANIC
+	bool "Panic on recoverable L1 cache errors"
+	depends on MSM_CACHE_ERP && MSM_L1_ERR_PANIC
+	help
+	  Certain CPU designs may be able to automatically recover from certain
+	  kinds of L1 cache errors, even though the L1 cache itself may not
+	  support error correction. These errors should not result in any kind
+	  of corruption, but their presence is nevertheless an indication of
+	  poor system health. To cause the kernel to panic whenever a
+	  recoverable L1 cache error is detected, say 'Y' here. This may be
+	  useful as a debugging technique if general system instability is
+	  suspected.
+
+	  For production builds, you should definitely say 'N' here.
 
 config MSM_L1_ERR_LOG
 	bool "Log CPU ERP events to system memory"
@@ -2535,4 +2638,14 @@ config MSM_HSIC_SYSMON_TEST
 	  can be read and written to send character data to the sysmon port of
 	  the modem over USB.
 
+config MSM_CPU_PWRCTL
+	bool "Ensures that krait droop detectors are always off"
+	help
+	  Droop detector mechanism can adversely affect krait plls during
+	  stand alone power collapse operation. Selecting this option
+	  ensures that they are always off.
+
 endif
+config LGE_IRRC
+	tristate "LGE_IRRC"
+	default n

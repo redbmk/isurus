@@ -29,7 +29,7 @@
 #include <linux/power/ltc4088-charger.h>
 #include <linux/gpio.h>
 #include <linux/msm_tsens.h>
-#include <linux/ion.h>
+#include <linux/msm_ion.h>
 #include <linux/memory.h>
 #include <asm/mach-types.h>
 #include <asm/mach/arch.h>
@@ -612,7 +612,7 @@ static int msm_hsusb_vbus_power(bool on)
 static int shelby_phy_init_seq[] = {
 	0x44, 0x80,/* set VBUS valid threshold and
 			disconnect valid threshold */
-	0x38, 0x81, /* update DC voltage level */
+	0x68, 0x81, /* update DC voltage level */
 	0x24, 0x82,/* set preemphasis and rise/fall time */
 	0x13, 0x83,/* set source impedance adjustment */
 	-1};
@@ -620,8 +620,8 @@ static int shelby_phy_init_seq[] = {
 #define USB_BAM_PHY_BASE	0x12502000
 #define HSIC_BAM_PHY_BASE	0x12542000
 #define A2_BAM_PHY_BASE		0x124C2000
-static struct usb_bam_pipe_connect msm_usb_bam_connections[2][4][2] = {
-	[0][0][USB_TO_PEER_PERIPHERAL] = {
+static struct usb_bam_pipe_connect msm_usb_bam_connections[MAX_BAMS][4][2] = {
+	[HSUSB_BAM][0][USB_TO_PEER_PERIPHERAL] = {
 		.src_phy_addr = USB_BAM_PHY_BASE,
 		.src_pipe_index = 11,
 		.dst_phy_addr = A2_BAM_PHY_BASE,
@@ -631,7 +631,7 @@ static struct usb_bam_pipe_connect msm_usb_bam_connections[2][4][2] = {
 		.desc_fifo_base_offset = 0x1700,
 		.desc_fifo_size = 0x300,
 	},
-	[0][0][PEER_PERIPHERAL_TO_USB] = {
+	[HSUSB_BAM][0][PEER_PERIPHERAL_TO_USB] = {
 		.src_phy_addr = A2_BAM_PHY_BASE,
 		.src_pipe_index = 1,
 		.dst_phy_addr = USB_BAM_PHY_BASE,
@@ -641,7 +641,7 @@ static struct usb_bam_pipe_connect msm_usb_bam_connections[2][4][2] = {
 		.desc_fifo_base_offset = 0x1000,
 		.desc_fifo_size = 0x100,
 	},
-	[0][1][USB_TO_PEER_PERIPHERAL] = {
+	[HSUSB_BAM][1][USB_TO_PEER_PERIPHERAL] = {
 		.src_phy_addr = USB_BAM_PHY_BASE,
 		.src_pipe_index = 13,
 		.dst_phy_addr = A2_BAM_PHY_BASE,
@@ -651,7 +651,7 @@ static struct usb_bam_pipe_connect msm_usb_bam_connections[2][4][2] = {
 		.desc_fifo_base_offset = 0x2700,
 		.desc_fifo_size = 0x300,
 	},
-	[0][1][PEER_PERIPHERAL_TO_USB] = {
+	[HSUSB_BAM][1][PEER_PERIPHERAL_TO_USB] = {
 		.src_phy_addr = A2_BAM_PHY_BASE,
 		.src_pipe_index = 3,
 		.dst_phy_addr = USB_BAM_PHY_BASE,
@@ -661,7 +661,7 @@ static struct usb_bam_pipe_connect msm_usb_bam_connections[2][4][2] = {
 		.desc_fifo_base_offset = 0x2000,
 		.desc_fifo_size = 0x100,
 	},
-	[0][2][USB_TO_PEER_PERIPHERAL] = {
+	[HSUSB_BAM][2][USB_TO_PEER_PERIPHERAL] = {
 		.src_phy_addr = USB_BAM_PHY_BASE,
 		.src_pipe_index = 15,
 		.dst_phy_addr = A2_BAM_PHY_BASE,
@@ -671,7 +671,7 @@ static struct usb_bam_pipe_connect msm_usb_bam_connections[2][4][2] = {
 		.desc_fifo_base_offset = 0x3700,
 		.desc_fifo_size = 0x300,
 	},
-	[0][2][PEER_PERIPHERAL_TO_USB] = {
+	[HSUSB_BAM][2][PEER_PERIPHERAL_TO_USB] = {
 		.src_phy_addr = A2_BAM_PHY_BASE,
 		.src_pipe_index = 5,
 		.dst_phy_addr = USB_BAM_PHY_BASE,
@@ -681,7 +681,7 @@ static struct usb_bam_pipe_connect msm_usb_bam_connections[2][4][2] = {
 		.desc_fifo_base_offset = 0x3000,
 		.desc_fifo_size = 0x100,
 	},
-	[1][0][USB_TO_PEER_PERIPHERAL] = {
+	[HSIC_BAM][0][USB_TO_PEER_PERIPHERAL] = {
 		.src_phy_addr = HSIC_BAM_PHY_BASE,
 		.src_pipe_index = 1,
 		.dst_phy_addr = A2_BAM_PHY_BASE,
@@ -691,7 +691,7 @@ static struct usb_bam_pipe_connect msm_usb_bam_connections[2][4][2] = {
 		.desc_fifo_base_offset = 0x1700,
 		.desc_fifo_size = 0x300,
 	},
-	[1][0][PEER_PERIPHERAL_TO_USB] = {
+	[HSIC_BAM][0][PEER_PERIPHERAL_TO_USB] = {
 		.src_phy_addr = A2_BAM_PHY_BASE,
 		.src_pipe_index = 1,
 		.dst_phy_addr = HSIC_BAM_PHY_BASE,
@@ -701,7 +701,7 @@ static struct usb_bam_pipe_connect msm_usb_bam_connections[2][4][2] = {
 		.desc_fifo_base_offset = 0x1000,
 		.desc_fifo_size = 0x100,
 	},
-	[1][1][USB_TO_PEER_PERIPHERAL] = {
+	[HSIC_BAM][1][USB_TO_PEER_PERIPHERAL] = {
 		.src_phy_addr = HSIC_BAM_PHY_BASE,
 		.src_pipe_index = 3,
 		.dst_phy_addr = A2_BAM_PHY_BASE,
@@ -711,7 +711,7 @@ static struct usb_bam_pipe_connect msm_usb_bam_connections[2][4][2] = {
 		.desc_fifo_base_offset = 0x2700,
 		.desc_fifo_size = 0x300,
 	},
-	[1][1][PEER_PERIPHERAL_TO_USB] = {
+	[HSIC_BAM][1][PEER_PERIPHERAL_TO_USB] = {
 		.src_phy_addr = A2_BAM_PHY_BASE,
 		.src_pipe_index = 3,
 		.dst_phy_addr = HSIC_BAM_PHY_BASE,
@@ -721,7 +721,7 @@ static struct usb_bam_pipe_connect msm_usb_bam_connections[2][4][2] = {
 		.desc_fifo_base_offset = 0x2000,
 		.desc_fifo_size = 0x100,
 	},
-	[1][2][USB_TO_PEER_PERIPHERAL] = {
+	[HSIC_BAM][2][USB_TO_PEER_PERIPHERAL] = {
 		.src_phy_addr = HSIC_BAM_PHY_BASE,
 		.src_pipe_index = 5,
 		.dst_phy_addr = A2_BAM_PHY_BASE,
@@ -731,7 +731,7 @@ static struct usb_bam_pipe_connect msm_usb_bam_connections[2][4][2] = {
 		.desc_fifo_base_offset = 0x3700,
 		.desc_fifo_size = 0x300,
 	},
-	[1][2][PEER_PERIPHERAL_TO_USB] = {
+	[HSIC_BAM][2][PEER_PERIPHERAL_TO_USB] = {
 		.src_phy_addr = A2_BAM_PHY_BASE,
 		.src_pipe_index = 5,
 		.dst_phy_addr = HSIC_BAM_PHY_BASE,
@@ -932,6 +932,7 @@ static struct platform_device *common_devices[] = {
 	&msm_bus_def_fab,
 	&msm9615_rpm_log_device,
 	&msm9615_rpm_stat_device,
+	&msm9615_rpm_master_stat_device,
 	&msm_tsens_device,
 };
 

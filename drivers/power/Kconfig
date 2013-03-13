@@ -415,6 +415,14 @@ config PM8921_BMS
 	help
 	  Say Y here to enable support for pm8921 chip bms subdevice
 
+config BATTERY_BCL
+	tristate "Battery Current Limit driver"
+	help
+	  Say Y here to enable support for battery current limit
+	  device. The BCL driver will poll BMS if
+	  thermal daemon enables BCL.
+	  It will notify thermal daemon if IBat crosses Imax threshold.
+
 config CHARGER_SMB347
 	tristate "Summit Microelectronics SMB347 Battery Charger"
 	depends on I2C
@@ -435,23 +443,86 @@ config AB8500_BATTERY_THERM_ON_BATCTRL
 	  Say Y to enable battery temperature measurements using
 	  thermistor connected on BATCTRL ADC.
 
-config WIRELESS_CHARGER
-	bool "Wireless Charger Configuration"
+config LGE_PM
+	tristate "PM8921 LGE Feature"
+	depends on MFD_PM8921_CORE
 	default n
 	help
-	  wireless charger configuration
+	  Say Y here to enable support for pm8921 chip lge feature
 
-config BQ51051B_CHARGER
-	bool "TI BQ51051B Wireless Charging control Driver"
-	depends on WIRELESS_CHARGER
-	help
-	  TI BQ51051B wireless charging control driver
-
-config BATTERY_TEMP_CONTROL
+config LGE_PM_DEBUG
+	depends on LGE_PM
 	default n
-	bool "Battery Temperature Control Configuration"
+	bool "LGE Power debug"
 	help
-	  Say Y to enable battery temperature control for safty.
-	  It controls charging current depending on battery temperature.
+	  Say Y here to enable debugging messages for LGE power supply class
+	  and drivers.
+
+config BATTERY_MAX17043
+	tristate "Maxim MAX17043 Fuel Gauge"
+	depends on I2C && LGE_PM
+	default n
+	help
+	  MAX17043 is fuel-gauge systems for lithium-ion (Li+) batteries
+	  in handheld and portable equipment. The MAX17043 is configured
+	  to operate with a single lithium cell
+	  
+config BATTERY_MAX17047
+	tristate "Maxim MAX17047 Fuel Gauge"
+	depends on I2C && LGE_PM
+	default n
+	help
+	  MAX17047 is fuel-gauge systems for lithium-ion (Li+) batteries
+	  in handheld and portable equipment. The MAX17047 is configured
+	  to operate with a single lithium cell
+
+config LGE_PM_BATTERY_ID_CHECKER
+	depends on LGE_PM
+	default n
+	bool "LGE PM BATTERY ID CHECKER"
+	help
+	  LGE PM Battery Id Checker Configuration
+
+config LGE_CHARGER_TEMP_SCENARIO
+	depends on LGE_PM
+	default n
+	bool "LGE CHARGER TEMP SCENARIO Configuration"
+	help
+	  LGE CHARGER TEMP SCENARIO Configuration
+
+config LGE_WIRELESS_CHARGER
+	depends on LGE_PM
+	default n
+	bool "LGE WIRELESS CHARGER Configuration"
+	help
+	  LGE WIRELESS CHARGER Configuration
+
+config LGE_PM_ADP_CHG
+	depends on LGE_PM
+	default n
+	bool "LGE PM ADAPTIVE USB CHARGING CURRENT"
+	help
+	  Say Y here to enable support for LGE adaptive usb charging current
+
+config LGE_PM_LOW_BATT_CHG
+	depends on LGE_PM
+	default n
+	bool "LGE LOW VOLTAGE BATTERY CHARGING Configuration"
+	help
+	  LGE LOW VOLTAGE BATTERY CHARGING Configuration
+
+config LGE_PM_REMOVE_BATT
+	depends on LGE_PM
+	default n
+	bool "LGE PM REMOVABLE BATTERY Feature"
+	help
+	  Say Y here to enable support for LGE removable battery feature
+
+config LGE_PM_PWM_LED
+	depends on LGE_PM
+	default n
+	bool "LGE PM PWM LED Configuration"
+	help
+	  LGE PM PWM LED Configuration
 
 endif # POWER_SUPPLY

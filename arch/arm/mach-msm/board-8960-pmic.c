@@ -109,7 +109,7 @@ static struct pm8xxx_gpio_init pm8921_gpios[] __initdata = {
 	PM8XXX_GPIO_OUTPUT(43, 1),                       /* DISP_RESET_N */
 	PM8XXX_GPIO_OUTPUT(42, 0),                      /* USB 5V reg enable */
 	/* TABLA CODEC RESET */
-	PM8XXX_GPIO_OUTPUT_STRENGTH(34, 1, PM_GPIO_STRENGTH_MED)
+	PM8XXX_GPIO_OUTPUT_STRENGTH(34, 0, PM_GPIO_STRENGTH_MED)
 };
 
 /* Initial PM8921 MPP configurations */
@@ -249,8 +249,8 @@ static struct pm8xxx_keypad_platform_data keypad_data_liquid = {
 static const unsigned int keymap[] = {
 	KEY(0, 0, KEY_VOLUMEUP),
 	KEY(0, 1, KEY_VOLUMEDOWN),
-	KEY(0, 2, KEY_CAMERA_SNAPSHOT),
-	KEY(0, 3, KEY_CAMERA_FOCUS),
+	KEY(0, 2, KEY_CAMERA_FOCUS),
+	KEY(0, 3, KEY_CAMERA_SNAPSHOT),
 };
 
 static struct matrix_keymap_data keymap_data = {
@@ -401,8 +401,8 @@ static struct pm8921_charger_platform_data pm8921_chg_pdata __devinitdata = {
 	.max_voltage		= MAX_VOLTAGE_MV,
 	.min_voltage		= 3200,
 	.uvd_thresh_voltage	= 4050,
-	.alarm_voltage		= 3400,
-	.resume_voltage_delta	= 100,
+	.resume_voltage_delta	= 60,
+	.resume_charge_percent	= 99,
 	.term_current		= CHG_TERM_MA,
 	.cool_temp		= 10,
 	.warm_temp		= 40,
@@ -604,6 +604,8 @@ void __init msm8960_init_pmic(void)
 		pm8921_platform_data.bms_pdata->battery_type = BATT_DESAY;
 	} else if (machine_is_msm8960_mtp()) {
 		pm8921_platform_data.bms_pdata->battery_type = BATT_PALLADIUM;
+	} else if (machine_is_msm8960_cdp()) {
+		pm8921_chg_pdata.has_dc_supply = true;
 	}
 
 	if (machine_is_msm8960_fluid())

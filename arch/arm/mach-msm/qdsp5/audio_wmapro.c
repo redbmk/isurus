@@ -40,11 +40,12 @@
 #include <linux/msm_audio.h>
 #include <linux/memory_alloc.h>
 #include <linux/msm_audio_wmapro.h>
-#include <linux/ion.h>
+#include <linux/msm_ion.h>
 
 #include <mach/msm_adsp.h>
 #include <mach/qdsp5/qdsp5audppcmdi.h>
 #include <mach/qdsp5/qdsp5audppmsg.h>
+#include <mach/qdsp5/qdsp5audpp.h>
 #include <mach/qdsp5/qdsp5audplaycmdi.h>
 #include <mach/qdsp5/qdsp5audplaymsg.h>
 #include <mach/qdsp5/qdsp5rmtcmdi.h>

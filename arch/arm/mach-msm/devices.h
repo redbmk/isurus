@@ -55,6 +55,7 @@ extern struct platform_device *msm_device_uart_gsbi9;
 extern struct platform_device msm_device_uart_dm6;
 extern struct platform_device msm_device_uart_dm8;
 extern struct platform_device msm_device_uart_dm9;
+extern struct platform_device mpq8064_device_uartdm_gsbi6;
 
 extern struct platform_device msm8960_device_uart_gsbi2;
 extern struct platform_device msm8960_device_uart_gsbi5;
@@ -85,11 +86,20 @@ extern struct platform_device msm8960_device_ebi1_ch1_erp;
 extern struct platform_device apq8064_device_uart_gsbi1;
 extern struct platform_device apq8064_device_uart_gsbi3;
 extern struct platform_device apq8064_device_uart_gsbi4;
+#if defined(CONFIG_LGE_FELICA) || defined(CONFIG_LGE_NFC_SONY_CXD2235AGG)
+extern struct platform_device apq8064_device_felica_gsbi6;
+extern struct platform_device apq8064_device_felica_gsbi3;
+#endif 
 extern struct platform_device apq8064_device_uart_gsbi7;
+
 extern struct platform_device apq8064_device_qup_i2c_gsbi1;
 extern struct platform_device apq8064_device_qup_i2c_gsbi3;
 extern struct platform_device apq8064_device_qup_i2c_gsbi4;
+
+#if defined(CONFIG_LGE_BROADCAST_TDMB) || defined(CONFIG_LGE_BROADCAST_ONESEG)
 extern struct platform_device apq8064_device_qup_spi_gsbi5;
+#endif	 /* CONFIG_LGE_BROADCAST */
+
 extern struct platform_device apq8064_slim_ctrl;
 extern struct platform_device apq8064_device_ssbi_pmic1;
 extern struct platform_device apq8064_device_ssbi_pmic2;
@@ -294,10 +304,14 @@ extern struct platform_device *msm8660_footswitch[];
 extern unsigned msm8660_num_footswitch;
 extern struct platform_device *msm8960_footswitch[];
 extern unsigned msm8960_num_footswitch;
+extern struct platform_device *msm8960ab_footswitch[];
+extern unsigned msm8960ab_num_footswitch;
 extern struct platform_device *apq8064_footswitch[];
 extern unsigned apq8064_num_footswitch;
 extern struct platform_device *msm8930_footswitch[];
 extern unsigned msm8930_num_footswitch;
+extern struct platform_device *msm8930_pm8917_footswitch[];
+extern unsigned msm8930_pm8917_num_footswitch;
 extern struct platform_device *msm8627_footswitch[];
 extern unsigned msm8627_num_footswitch;
 
@@ -313,6 +327,7 @@ extern struct platform_device msm_kgsl_2d1;
 
 extern struct platform_device msm_mipi_dsi1_device;
 extern struct platform_device mipi_dsi_device;
+extern struct platform_device msm_lcdc_device;
 extern struct platform_device msm_lvds_device;
 extern struct platform_device msm_ebi2_lcdc_device;
 
@@ -330,10 +345,12 @@ extern struct platform_device led_pdev;
 
 extern struct platform_device msm8960_rpm_device;
 extern struct platform_device msm8960_rpm_stat_device;
+extern struct platform_device msm8960_rpm_master_stat_device;
 extern struct platform_device msm8960_rpm_log_device;
 
 extern struct platform_device msm8930_rpm_device;
 extern struct platform_device msm8930_rpm_stat_device;
+extern struct platform_device msm8930_rpm_master_stat_device;
 extern struct platform_device msm8930_rpm_log_device;
 extern struct platform_device msm8930_rpm_rbcpr_device;
 
@@ -343,10 +360,12 @@ extern struct platform_device msm8660_rpm_log_device;
 
 extern struct platform_device msm9615_rpm_device;
 extern struct platform_device msm9615_rpm_stat_device;
+extern struct platform_device msm9615_rpm_master_stat_device;
 extern struct platform_device msm9615_rpm_log_device;
 
 extern struct platform_device apq8064_rpm_device;
 extern struct platform_device apq8064_rpm_stat_device;
+extern struct platform_device apq8064_rpm_master_stat_device;
 extern struct platform_device apq8064_rpm_log_device;
 
 extern struct platform_device msm_device_rng;
@@ -443,3 +462,8 @@ extern struct platform_device msm8960ab_device_acpuclk;
 extern struct platform_device msm9615_device_acpuclk;
 
 extern struct platform_device msm_gpio_device;
+
+extern struct platform_device apq_cpudai_mi2s;
+extern struct platform_device apq_cpudai_i2s_rx;
+extern struct platform_device apq_cpudai_i2s_tx;
+

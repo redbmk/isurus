@@ -37,15 +37,19 @@
 #include "acpuclock.h"
 #include "acpuclock-krait.h"
 
+#ifdef CONFIG_LGE_PM_LOW_BATT_CHG
+#include <mach/board_lge.h>
+#endif
+
 /* MUX source selects. */
 #define PRI_SRC_SEL_SEC_SRC	0
 #define PRI_SRC_SEL_HFPLL	1
 #define PRI_SRC_SEL_HFPLL_DIV2	2
-#define SEC_SRC_SEL_L2PLL	1
-#define SEC_SRC_SEL_AUX		2
 
-/* PTE EFUSE register offset. */
-#define PTE_EFUSE		0xC0
+#define SECCLKAGD		BIT(4)
+
+int g_speed_bin;
+int g_pvs_bin;
 
 static DEFINE_MUTEX(driver_lock);
 static DEFINE_SPINLOCK(l2_lock);
@@ -81,14 +85,24 @@ static void set_pri_clk_src(struct scalable *sc, u32 pri_src_sel)
 }
 
 /* Select a source on the secondary MUX. */
-static void set_sec_clk_src(struct scalable *sc, u32 sec_src_sel)
+static void __cpuinit set_sec_clk_src(struct scalable *sc, u32 sec_src_sel)
 {
 	u32 regval;
 
+	/* 8064 Errata: disable sec_src clock gating during switch. */
 	regval = get_l2_indirect_reg(sc->l2cpmr_iaddr);
+	regval |= SECCLKAGD;
+	set_l2_indirect_reg(sc->l2cpmr_iaddr, regval);
+
+	/* Program the MUX */
 	regval &= ~(0x3 << 2);
 	regval |= ((sec_src_sel & 0x3) << 2);
 	set_l2_indirect_reg(sc->l2cpmr_iaddr, regval);
+
+	/* 8064 Errata: re-enabled sec_src clock gating. */
+	regval &= ~SECCLKAGD;
+	set_l2_indirect_reg(sc->l2cpmr_iaddr, regval);
+
 	/* Wait for switch to complete. */
 	mb();
 	udelay(1);
@@ -222,7 +236,6 @@ static void set_speed(struct scalable *sc, const struct core_speed *tgt_s)
 		 * Move to an always-on source running at a frequency
 		 * that does not require an elevated CPU voltage.
 		 */
-		set_sec_clk_src(sc, SEC_SRC_SEL_AUX);
 		set_pri_clk_src(sc, PRI_SRC_SEL_SEC_SRC);
 
 		/* Re-program HFPLL. */
@@ -233,15 +246,12 @@ static void set_speed(struct scalable *sc, const struct core_speed *tgt_s)
 		/* Move to HFPLL. */
 		set_pri_clk_src(sc, tgt_s->pri_src_sel);
 	} else if (strt_s->src == HFPLL && tgt_s->src != HFPLL) {
-		set_sec_clk_src(sc, tgt_s->sec_src_sel);
 		set_pri_clk_src(sc, tgt_s->pri_src_sel);
 		hfpll_disable(sc, false);
 	} else if (strt_s->src != HFPLL && tgt_s->src == HFPLL) {
 		hfpll_set_rate(sc, tgt_s);
 		hfpll_enable(sc, false);
 		set_pri_clk_src(sc, tgt_s->pri_src_sel);
-	} else {
-		set_sec_clk_src(sc, tgt_s->sec_src_sel);
 	}
 
 	sc->cur_speed = tgt_s;
@@ -442,6 +452,30 @@ static int acpuclk_krait_set_rate(int cpu, unsigned long rate,
 	unsigned long flags;
 	int rc = 0;
 
+#if defined(CONFIG_MACH_APQ8064_GK_KR)	|| defined(CONFIG_MACH_APQ8064_GKATT) || defined(CONFIG_MACH_APQ8064_GVDCM)
+	static int count =0;
+	if(count < 400)count++;	
+	
+	if(rate >= 1026000 && count < 400){
+		switch(lge_get_boot_mode()){
+			case LGE_BOOT_MODE_PIFBOOT :
+			case LGE_BOOT_MODE_PIFBOOT2 :
+				rate = 1026000;
+			break;
+			case LGE_BOOT_MODE_FACTORY :
+			case LGE_BOOT_MODE_FACTORY2 :
+			case LGE_BOOT_MODE_NORMAL :
+			case LGE_BOOT_MODE_CHARGER :
+			case LGE_BOOT_MODE_CHARGERLOGO :
+			default :
+				if(rate >= 1134000) rate = 1134000;
+			break;
+		}
+	}
+
+	//printk("PCH_TEST CPU=%d Count=%d, rate=%d\n", cpu, count, (unsigned int)rate);
+#endif
+
 	if (cpu > num_possible_cpus())
 		return -EINVAL;
 
@@ -521,7 +555,7 @@ static struct acpuclk_data acpuclk_krait_data = {
 };
 
 /* Initialize a HFPLL at a given rate and enable it. */
-static void __cpuinit hfpll_init(struct scalable *sc,
+static void __init hfpll_init(struct scalable *sc,
 			      const struct core_speed *tgt_s)
 {
 	dev_dbg(drv.dev, "Initializing HFPLL%d\n", sc - drv.scalable);
@@ -699,7 +733,7 @@ static int __cpuinit init_clock_sources(struct scalable *sc,
 	}
 
 	/* Switch away from the HFPLL while it's re-initialized. */
-	set_sec_clk_src(sc, SEC_SRC_SEL_AUX);
+	set_sec_clk_src(sc, sc->sec_clk_sel);
 	set_pri_clk_src(sc, PRI_SRC_SEL_SEC_SRC);
 	hfpll_init(sc, tgt_s);
 
@@ -709,7 +743,6 @@ static int __cpuinit init_clock_sources(struct scalable *sc,
 	set_l2_indirect_reg(sc->l2cpmr_iaddr, regval);
 
 	/* Switch to the target clock source. */
-	set_sec_clk_src(sc, tgt_s->sec_src_sel);
 	set_pri_clk_src(sc, tgt_s->pri_src_sel);
 	sc->cur_speed = tgt_s;
 
@@ -720,7 +753,6 @@ static void __cpuinit fill_cur_core_speed(struct core_speed *s,
 					  struct scalable *sc)
 {
 	s->pri_src_sel = get_l2_indirect_reg(sc->l2cpmr_iaddr) & 0x3;
-	s->sec_src_sel = (get_l2_indirect_reg(sc->l2cpmr_iaddr) >> 2) & 0x3;
 	s->pll_l_val = readl_relaxed(sc->hfpll_base + drv.hfpll_data->l_offset);
 }
 
@@ -728,7 +760,6 @@ static bool __cpuinit speed_equal(const struct core_speed *s1,
 				  const struct core_speed *s2)
 {
 	return (s1->pri_src_sel == s2->pri_src_sel &&
-		s1->sec_src_sel == s2->sec_src_sel &&
 		s1->pll_l_val == s2->pll_l_val);
 }
 
@@ -782,16 +813,22 @@ static int __cpuinit per_cpu_init(int cpu)
 	}
 
 	acpu_level = find_cur_acpu_level(cpu);
-	if (!acpu_level) {
+#ifdef CONFIG_LGE_PM_LOW_BATT_CHG
+	/* chargerlogo wants min cpu freq */
+	if(!acpu_level || lge_get_charger_logo_state())
+#else
+	if (!acpu_level)
+#endif
+	{
 		acpu_level = find_min_acpu_level();
 		if (!acpu_level) {
 			ret = -ENODEV;
 			goto err_table;
 		}
-		dev_dbg(drv.dev, "CPU%d is running at an unknown rate. Defaulting to %lu KHz.\n",
+		dev_info(drv.dev, "CPU%d is running at an unknown rate. Defaulting to %lu KHz.\n",
 			cpu, acpu_level->speed.khz);
 	} else {
-		dev_dbg(drv.dev, "CPU%d is running at %lu KHz\n", cpu,
+		dev_info(drv.dev, "CPU%d is running at %lu KHz\n", cpu,
 			acpu_level->speed.khz);
 	}
 
@@ -926,63 +963,77 @@ static const int krait_needs_vmin(void)
 
 static void krait_apply_vmin(struct acpu_level *tbl)
 {
-	for (; tbl->speed.khz != 0; tbl++)
+	for (; tbl->speed.khz != 0; tbl++) 
 		if (tbl->vdd_core < 1150000)
 			tbl->vdd_core = 1150000;
 }
 
-static int __init select_freq_plan(u32 qfprom_phys)
+static int __init get_speed_bin(u32 pte_efuse)
 {
-	void __iomem *qfprom_base;
-	u32 pte_efuse, pvs, tbl_idx;
-	char *pvs_names[] = { "Slow", "Nominal", "Fast", "Faster", "Unknown" };
+	uint32_t speed_bin;
 
-	qfprom_base = ioremap(qfprom_phys, SZ_256);
-	/* Select frequency tables. */
-	if (qfprom_base) {
-		pte_efuse = readl_relaxed(qfprom_base + PTE_EFUSE);
-		pvs = (pte_efuse >> 10) & 0x7;
-		iounmap(qfprom_base);
-		if (pvs == 0x7)
-			pvs = (pte_efuse >> 13) & 0x7;
+	speed_bin = pte_efuse & 0xF;
+	if (speed_bin == 0xF)
+		speed_bin = (pte_efuse >> 4) & 0xF;
 
-		switch (pvs) {
-		case 0x0:
-		case 0x7:
-			tbl_idx = PVS_SLOW;
-			break;
-		case 0x1:
-			tbl_idx = PVS_NOMINAL;
-			break;
-		case 0x3:
-			tbl_idx = PVS_FAST;
-			break;
-		case 0x4:
-			tbl_idx = PVS_FASTER;
-			break;
-		default:
-			tbl_idx = PVS_UNKNOWN;
-			break;
-		}
+	if (speed_bin == 0xF) {
+		speed_bin = 0;
+		dev_warn(drv.dev, "SPEED BIN: Defaulting to %d\n", speed_bin);
 	} else {
-		tbl_idx = PVS_UNKNOWN;
+		dev_info(drv.dev, "SPEED BIN: %d\n", speed_bin);
+	}
+
+	g_speed_bin = speed_bin;
+
+	return speed_bin;
+}
+
+static int __init get_pvs_bin(u32 pte_efuse)
+{
+	uint32_t pvs_bin;
+
+	pvs_bin = (pte_efuse >> 10) & 0x7;
+	if (pvs_bin == 0x7)
+		pvs_bin = (pte_efuse >> 13) & 0x7;
+
+	if (pvs_bin == 0x7) {
+		pvs_bin = 0;
+		dev_warn(drv.dev, "ACPU PVS: Defaulting to %d\n", pvs_bin);
+	} else {
+		dev_info(drv.dev, "ACPU PVS: %d\n", pvs_bin);
+	}
+
+	g_pvs_bin = pvs_bin;
+
+	return pvs_bin;
+}
+
+static struct pvs_table * __init select_freq_plan(u32 pte_efuse_phys,
+			struct pvs_table (*pvs_tables)[NUM_PVS])
+{
+	void __iomem *pte_efuse;
+	u32 pte_efuse_val, tbl_idx, bin_idx;
+
+	pte_efuse = ioremap(pte_efuse_phys, 4);
+	if (!pte_efuse) {
 		dev_err(drv.dev, "Unable to map QFPROM base\n");
-	}
-	if (tbl_idx == PVS_UNKNOWN) {
-		tbl_idx = PVS_SLOW;
-		dev_warn(drv.dev, "ACPU PVS: Defaulting to %s\n",
-			 pvs_names[tbl_idx]);
-	} else {
-		dev_info(drv.dev, "ACPU PVS: %s\n", pvs_names[tbl_idx]);
+		return NULL;
 	}
 
-	return tbl_idx;
+	pte_efuse_val = readl_relaxed(pte_efuse);
+	iounmap(pte_efuse);
+
+	/* Select frequency tables. */
+	bin_idx = get_speed_bin(pte_efuse_val);
+	tbl_idx = get_pvs_bin(pte_efuse_val);
+
+	return &pvs_tables[bin_idx][tbl_idx];
 }
 
 static void __init drv_data_init(struct device *dev,
 				 const struct acpuclk_krait_params *params)
 {
-	int tbl_idx;
+	struct pvs_table *pvs;
 
 	drv.dev = dev;
 	drv.scalable = kmemdup(params->scalable, params->scalable_size,
@@ -1005,12 +1056,12 @@ static void __init drv_data_init(struct device *dev,
 		GFP_KERNEL);
 	BUG_ON(!drv.bus_scale->usecase);
 
-	tbl_idx = select_freq_plan(params->qfprom_phys_base);
-	drv.acpu_freq_tbl = kmemdup(params->pvs_tables[tbl_idx].table,
-				    params->pvs_tables[tbl_idx].size,
-				    GFP_KERNEL);
+	pvs = select_freq_plan(params->pte_efuse_phys, params->pvs_tables);
+	BUG_ON(!pvs->table);
+
+	drv.acpu_freq_tbl = kmemdup(pvs->table, pvs->size, GFP_KERNEL);
 	BUG_ON(!drv.acpu_freq_tbl);
-	drv.boost_uv = params->pvs_tables[tbl_idx].boost_uv;
+	drv.boost_uv = pvs->boost_uv;
 
 	acpuclk_krait_data.power_collapse_khz = params->stby_khz;
 	acpuclk_krait_data.wait_for_irq_khz = params->stby_khz;
@@ -1031,6 +1082,7 @@ static void __init hw_init(void)
 	rc = rpm_regulator_init(l2, VREG_HFPLL_A,
 				l2->vreg[VREG_HFPLL_A].max_vdd, false);
 	BUG_ON(rc);
+
 	rc = rpm_regulator_init(l2, VREG_HFPLL_B,
 				l2->vreg[VREG_HFPLL_B].max_vdd, false);
 	BUG_ON(rc);
@@ -1051,6 +1103,7 @@ static void __init hw_init(void)
 	for_each_online_cpu(cpu) {
 		rc = per_cpu_init(cpu);
 		BUG_ON(rc);
+
 	}
 
 	bus_init(l2_level);

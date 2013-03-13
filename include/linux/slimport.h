@@ -18,6 +18,7 @@
 
 #define SSC_EN
 #define HDCP_EN
+//#define EYE_TEST
 
 #if 0
 #define SSC_1
@@ -38,6 +39,7 @@ extern unchar sp_tx_rx_mydp;
 
 extern unchar bedid_break;
 
+
 int sp_read_reg(uint8_t slave_addr, uint8_t offset, uint8_t *buf);
 int sp_write_reg(uint8_t slave_addr, uint8_t offset, uint8_t value);
 void sp_tx_hardware_poweron(void);
@@ -47,7 +49,9 @@ int slimport_read_edid_block(int block, uint8_t *edid_buf);
 #ifdef CONFIG_SLIMPORT_ANX7808
 bool slimport_is_connected(void);
 unchar sp_get_link_bw(void);
-void sp_set_link_bw(unchar link_bw);
+void set_link_bw(unchar link_bw);
+void hdmi_common_set_hpd_on(int on);
+
 #else
 static inline bool slimport_is_connected(void)
 {
@@ -61,5 +65,10 @@ static inline void sp_set_link_bw(unchar link_bw)
 {
 	return;
 }
+static inline void hdmi_common_set_hpd_on(int on);
+{
+       return;
+}
+
 #endif
 #endif

@@ -2,7 +2,7 @@
 #define _MSM_KGSL_H
 
 #define KGSL_VERSION_MAJOR        3
-#define KGSL_VERSION_MINOR        12
+#define KGSL_VERSION_MINOR        11
 
 /*context flags */
 #define KGSL_CONTEXT_SAVE_GMEM		0x00000001
@@ -367,12 +367,6 @@ struct kgsl_bind_gmem_shadow {
     _IOW(KGSL_IOC_TYPE, 0x22, struct kgsl_bind_gmem_shadow)
 
 /* add a block of memory into the GPU address space */
-
-/*
- * IOCTL_KGSL_SHAREDMEM_FROM_VMALLOC deprecated 09/2012
- * use IOCTL_KGSL_GPUMEM_ALLOC instead
- */
-
 struct kgsl_sharedmem_from_vmalloc {
 	unsigned int gpuaddr;	/*output param */
 	unsigned int hostptr;
@@ -432,8 +426,7 @@ struct kgsl_cff_syncmem {
 
 /*
  * A timestamp event allows the user space to register an action following an
- * expired timestamp. Note IOCTL_KGSL_TIMESTAMP_EVENT has been redefined to
- * _IOWR to support fences which need to return a fd for the priv parameter.
+ * expired timestamp.
  */
 
 struct kgsl_timestamp_event {
@@ -444,7 +437,7 @@ struct kgsl_timestamp_event {
 	size_t len;              /* Size of the event specific blob */
 };
 
-#define IOCTL_KGSL_TIMESTAMP_EVENT_OLD \
+#define IOCTL_KGSL_TIMESTAMP_EVENT \
 	_IOW(KGSL_IOC_TYPE, 0x31, struct kgsl_timestamp_event)
 
 /* A genlock timestamp event releases an existing lock on timestamp expire */
@@ -455,14 +448,6 @@ struct kgsl_timestamp_event_genlock {
 	int handle; /* Handle of the genlock lock to release */
 };
 
-/* A fence timestamp event releases an existing lock on timestamp expire */
-
-#define KGSL_TIMESTAMP_EVENT_FENCE 2
-
-struct kgsl_timestamp_event_fence {
-	int fence_fd; /* Fence to signal */
-};
-
 /*
  * Set a property within the kernel.  Uses the same structure as
  * IOCTL_KGSL_GETPROPERTY
@@ -470,9 +455,6 @@ struct kgsl_timestamp_event_fence {
 
 #define IOCTL_KGSL_SETPROPERTY \
 	_IOW(KGSL_IOC_TYPE, 0x32, struct kgsl_device_getproperty)
-
-#define IOCTL_KGSL_TIMESTAMP_EVENT \
-	_IOWR(KGSL_IOC_TYPE, 0x33, struct kgsl_timestamp_event)
 
 #ifdef __KERNEL__
 #ifdef CONFIG_MSM_KGSL_DRM

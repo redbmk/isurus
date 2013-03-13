@@ -24,6 +24,13 @@
 #include <linux/platform_device.h>
 #include <linux/of.h>
 #include <mach/cpufreq.h>
+#ifdef CONFIG_LGE_PM
+#include <mach/board_lge.h>
+#endif
+
+#ifdef CONFIG_LGE_PM
+#define DEF_ALLOWED_MAX_FREQ 1026000
+#endif
 
 static int enabled;
 static struct msm_thermal_data msm_thermal_info;
@@ -52,6 +59,7 @@ static int msm_thermal_get_freq_table(void)
 
 	limit_idx_low = 0;
 	limit_idx_high = limit_idx = i - 1;
+
 	BUG_ON(limit_idx_high <= 0 || limit_idx_high <= limit_idx_low);
 fail:
 	return ret;
@@ -102,7 +110,11 @@ static void check_temp(struct work_struct *work)
 			limit_init = 1;
 	}
 
-	if (temp >= msm_thermal_info.limit_temp_degC) {
+	if (temp >= msm_thermal_info.limit_temp_degC
+#if defined(CONFIG_MACH_APQ8064_GK_KR)||defined(CONFIG_MACH_APQ8064_GKATT)||defined(CONFIG_MACH_APQ8064_GVDCM)
+		|| temp <= msm_thermal_info.limit_temp_degC_low
+#endif
+		) {
 		if (limit_idx == limit_idx_low)
 			goto reschedule;
 
@@ -110,8 +122,17 @@ static void check_temp(struct work_struct *work)
 		if (limit_idx < limit_idx_low)
 			limit_idx = limit_idx_low;
 		max_freq = table[limit_idx].frequency;
-	} else if (temp < msm_thermal_info.limit_temp_degC -
-		 msm_thermal_info.temp_hysteresis_degC) {
+#ifdef CONFIG_LGE_PM
+		if(max_freq >= 1026000)
+			max_freq = DEF_ALLOWED_MAX_FREQ;
+		pr_info("msm_thermal: tsens_temp %ld\n", temp); 
+#endif
+	} else if ( (temp < msm_thermal_info.limit_temp_degC -
+		 msm_thermal_info.temp_hysteresis_degC)
+#if defined(CONFIG_MACH_APQ8064_GK_KR)||defined(CONFIG_MACH_APQ8064_GKATT)||defined(CONFIG_MACH_APQ8064_GVDCM)
+		 && (temp > msm_thermal_info.limit_temp_degC_low)
+#endif
+		) {
 		if (limit_idx == limit_idx_high)
 			goto reschedule;
 
@@ -150,6 +171,13 @@ static void disable_msm_thermal(void)
 	if (limited_max_freq == MSM_CPUFREQ_NO_LIMIT)
 		return;
 
+#if defined(CONFIG_MACH_APQ8064_GK_KR)||defined(CONFIG_MACH_APQ8064_GKATT)||defined(CONFIG_MACH_APQ8064_GVDCM)
+	if (limited_max_freq == DEF_ALLOWED_MAX_FREQ) {
+		pr_info("msm_thermal: continue  max_freq = %d..\n", DEF_ALLOWED_MAX_FREQ);
+		return;
+	}
+#endif
+
 	for_each_possible_cpu(cpu) {
 		update_cpu_max_freq(cpu, MSM_CPUFREQ_NO_LIMIT);
 	}
@@ -185,7 +213,7 @@ int __devinit msm_thermal_init(struct msm_thermal_data *pdata)
 	BUG_ON(!pdata);
 	BUG_ON(pdata->sensor_id >= TSENS_MAX_SENSORS);
 	memcpy(&msm_thermal_info, pdata, sizeof(struct msm_thermal_data));
-
+	
 	enabled = 1;
 	INIT_DELAYED_WORK(&check_temp_work, check_temp);
 	schedule_delayed_work(&check_temp_work, 0);

@@ -55,6 +55,8 @@ struct adb_dev {
 	wait_queue_head_t write_wq;
 	struct usb_request *rx_req;
 	int rx_done;
+	bool notify_close;
+	bool close_notified;
 };
 
 static struct usb_interface_descriptor adb_interface_desc = {
@@ -272,7 +274,9 @@ static ssize_t adb_read(struct file *fp, char __user *buf,
 	int r = count, xfer;
 	int ret;
 
+#ifndef CONFIG_USB_G_LGE_ANDROID
 	pr_debug("adb_read(%d)\n", count);
+#endif
 	if (!_adb_dev)
 		return -ENODEV;
 
@@ -310,7 +314,9 @@ requeue_req:
 		atomic_set(&dev->error, 1);
 		goto done;
 	} else {
+#ifndef CONFIG_USB_G_LGE_ANDROID
 		pr_debug("rx %p queue\n", req);
+#endif
 	}
 
 	/* wait for a request to complete */
@@ -327,7 +333,9 @@ requeue_req:
 		if (req->actual == 0)
 			goto requeue_req;
 
+#ifndef CONFIG_USB_G_LGE_ANDROID
 		pr_debug("rx %p %d\n", req, req->actual);
+#endif
 		xfer = (req->actual < count) ? req->actual : count;
 		if (copy_to_user(buf, req->buf, xfer))
 			r = -EFAULT;
@@ -337,7 +345,9 @@ requeue_req:
 
 done:
 	adb_unlock(&dev->read_excl);
+#ifndef CONFIG_USB_G_LGE_ANDROID
 	pr_debug("adb_read returning %d\n", r);
+#endif
 	return r;
 }
 
@@ -351,7 +361,9 @@ static ssize_t adb_write(struct file *fp, const char __user *buf,
 
 	if (!_adb_dev)
 		return -ENODEV;
+#ifndef CONFIG_USB_G_LGE_ANDROID
 	pr_debug("adb_write(%d)\n", count);
+#endif
 
 	if (adb_lock(&dev->write_excl))
 		return -EBUSY;
@@ -405,13 +417,15 @@ static ssize_t adb_write(struct file *fp, const char __user *buf,
 		adb_req_put(dev, &dev->tx_idle, req);
 
 	adb_unlock(&dev->write_excl);
+#ifndef CONFIG_USB_G_LGE_ANDROID
 	pr_debug("adb_write returning %d\n", r);
+#endif
 	return r;
 }
 
 static int adb_open(struct inode *ip, struct file *fp)
 {
-	pr_info("adb_open\n");
+	printk(KERN_INFO "adb_open\n");
 	if (!_adb_dev)
 		return -ENODEV;
 
@@ -423,16 +437,31 @@ static int adb_open(struct inode *ip, struct file *fp)
 	/* clear the error latch */
 	atomic_set(&_adb_dev->error, 0);
 
-	adb_ready_callback();
+	if (_adb_dev->close_notified) {
+		_adb_dev->close_notified = false;
+		adb_ready_callback();
+	}
 
+	_adb_dev->notify_close = true;
 	return 0;
 }
 
 static int adb_release(struct inode *ip, struct file *fp)
 {
-	pr_info("adb_release\n");
+	printk(KERN_INFO "adb_release\n");
 
-	adb_closed_callback();
+	/*
+	 * ADB daemon closes the device file after I/O error.  The
+	 * I/O error happen when Rx requests are flushed during
+	 * cable disconnect or bus reset in configured state.  Disabling
+	 * USB configuration and pull-up during these scenarios are
+	 * undesired.  We want to force bus reset only for certain
+	 * commands like "adb root" and "adb usb".
+	 */
+	if (_adb_dev->notify_close) {
+		adb_closed_callback();
+		_adb_dev->close_notified = true;
+	}
 
 	adb_unlock(&_adb_dev->open_excl);
 	return 0;
@@ -561,6 +590,12 @@ static void adb_function_disable(struct usb_function *f)
 	struct usb_composite_dev	*cdev = dev->cdev;
 
 	DBG(cdev, "adb_function_disable cdev %p\n", cdev);
+	/*
+	 * Bus reset happened or cable disconnected.  No
+	 * need to disable the configuration now.  We will
+	 * set noify_close to true when device file is re-opened.
+	 */
+	dev->notify_close = false;
 	atomic_set(&dev->online, 0);
 	atomic_set(&dev->error, 1);
 	usb_ep_disable(dev->ep_in);
@@ -607,6 +642,9 @@ static int adb_setup(void)
 	atomic_set(&dev->open_excl, 0);
 	atomic_set(&dev->read_excl, 0);
 	atomic_set(&dev->write_excl, 0);
+
+	/* config is disabled by default if adb is present. */
+	dev->close_notified = true;
 
 	INIT_LIST_HEAD(&dev->tx_idle);
 

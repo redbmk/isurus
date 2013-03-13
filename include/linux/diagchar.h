@@ -26,6 +26,10 @@
 #define UART_MODE			4
 #define SOCKET_MODE			5
 
+#ifdef CONFIG_LGE_DM_APP
+#define DM_APP_MODE			10
+#endif
+
 /* different values that go in for diag_data_type */
 #define DATA_TYPE_EVENT         	0
 #define DATA_TYPE_F3            	1
@@ -41,8 +45,6 @@
 #define DIAG_IOCTL_DCI_DEINIT		21
 #define DIAG_IOCTL_DCI_SUPPORT		22
 #define DIAG_IOCTL_DCI_REG		23
-#define DIAG_IOCTL_DCI_STREAM_INIT	24
-#define DIAG_IOCTL_DCI_HEALTH_STATS	25
 
 /* PC Tools IDs */
 #define APQ8060_TOOLS_ID	4062
@@ -691,7 +693,7 @@ static const uint32_t msg_bld_masks_22[] = {
 /* LOG CODES */
 
 #define LOG_0	0x0
-#define LOG_1	0x15A7
+#define LOG_1	0x1636
 #define LOG_2	0x0
 #define LOG_3	0x0
 #define LOG_4	0x4910
@@ -708,6 +710,5 @@ static const uint32_t msg_bld_masks_22[] = {
 #define LOG_15	0x0
 
 #define LOG_GET_ITEM_NUM(xx_code) (xx_code & 0x0FFF)
-#define LOG_GET_EQUIP_ID(xx_code) ((xx_code & 0xF000) >> 12)
 
 #endif

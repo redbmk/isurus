@@ -1,4 +1,4 @@
-/* Copyright (c) 2010, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010-2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -34,20 +34,20 @@ static struct msm_cpuidle_state msm_cstates[] = {
 	{0, 1, "C1", "RETENTION",
 		MSM_PM_SLEEP_MODE_RETENTION},
 
-	{0, 2, "C2", "STANDALONE_POWER_COLLAPSE",
-		MSM_PM_SLEEP_MODE_POWER_COLLAPSE_STANDALONE},
-
-	{0, 3, "C3", "POWER_COLLAPSE",
+	{0, 2, "C3", "POWER_COLLAPSE",
 		MSM_PM_SLEEP_MODE_POWER_COLLAPSE},
 
-	{1, 0, "C0", "WFI",
+	{0, 3, "C0", "WFI",
 		MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT},
 
-	{1, 1, "C1", "RETENTION",
+	{1, 0, "C1", "RETENTION",
 		MSM_PM_SLEEP_MODE_RETENTION},
 
-	{1, 2, "C2", "STANDALONE_POWER_COLLAPSE",
-		MSM_PM_SLEEP_MODE_POWER_COLLAPSE_STANDALONE},
+	{1, 1, "C0", "WFI",
+		MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT},
+
+	{1, 2, "C1", "RETENTION",
+		MSM_PM_SLEEP_MODE_RETENTION},
 
 	{2, 0, "C0", "WFI",
 		MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT},
@@ -55,17 +55,6 @@ static struct msm_cpuidle_state msm_cstates[] = {
 	{2, 1, "C1", "RETENTION",
 		MSM_PM_SLEEP_MODE_RETENTION},
 
-	{2, 2, "C2", "STANDALONE_POWER_COLLAPSE",
-		MSM_PM_SLEEP_MODE_POWER_COLLAPSE_STANDALONE},
-
-	{3, 0, "C0", "WFI",
-		MSM_PM_SLEEP_MODE_WAIT_FOR_INTERRUPT},
-
-	{3, 1, "C1", "RETENTION",
-		MSM_PM_SLEEP_MODE_RETENTION},
-
-	{3, 2, "C2", "STANDALONE_POWER_COLLAPSE",
-		MSM_PM_SLEEP_MODE_POWER_COLLAPSE_STANDALONE},
 };
 
 static int msm_cpuidle_enter(
@@ -76,14 +65,12 @@ static int msm_cpuidle_enter(
 	enum msm_pm_sleep_mode pm_mode;
 	struct cpuidle_state_usage *st_usage = NULL;
 
-	local_irq_disable();
-
 #ifdef CONFIG_CPU_PM
 	cpu_pm_enter();
 #endif
 
 	pm_mode = msm_pm_idle_prepare(dev, drv, index);
-	msm_pm_idle_enter(pm_mode);
+	dev->last_residency = msm_pm_idle_enter(pm_mode);
 	for (i = 0; i < dev->state_count; i++) {
 		st_usage = &dev->states_usage[i];
 		if ((enum msm_pm_sleep_mode) cpuidle_get_statedata(st_usage)

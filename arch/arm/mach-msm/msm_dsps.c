@@ -45,11 +45,16 @@
 #include "timer.h"
 
 #define DRV_NAME	"msm_dsps"
-#define DRV_VERSION	"4.02"
+#define DRV_VERSION	"4.03"
 
 
 #define PPSS_TIMER0_32KHZ_REG	0x1004
 #define PPSS_TIMER0_20MHZ_REG	0x0804
+
+#if defined(CONFIG_LGE_HANDLE_PANIC)
+#include <mach/restart.h>
+#include <mach/board_lge.h>
+#endif
 
 /**
  *  Driver Context
@@ -397,6 +402,12 @@ static void dsps_log_sfr(void)
 		smem_reset_reason[smem_reset_size-1] = 0;
 		pr_err("%s: DSPS failure: %s\nResetting DSPS\n",
 			__func__, smem_reset_reason);
+#if defined(CONFIG_LGE_HANDLE_PANIC)	/* g-tdr-bsp-sensor@lge.com, 2012-11-29, print file name and line when crash was happened */
+                set_crash_store_enable();
+                printk(KERN_EMERG "%s\n", smem_reset_reason);
+                set_crash_store_disable(); 
+#endif
+
 		memset(smem_reset_reason, 0, smem_reset_size);
 		wmb();
 	} else
@@ -771,6 +782,11 @@ static int dsps_shutdown(const struct subsys_desc *subsys)
 {
 	pr_debug("%s\n", __func__);
 	disable_irq_nosync(drv->wdog_irq);
+	if (drv->pdata->ppss_wdog_unmasked_int_en_reg) {
+		writel_relaxed(0, (drv->ppss_base+
+			drv->pdata->ppss_wdog_unmasked_int_en_reg));
+		mb(); /* Make sure wdog is disabled before shutting down */
+	}
 	pil_force_shutdown(drv->pdata->pil_name);
 	dsps_power_off_handler();
 	return 0;
@@ -799,6 +815,7 @@ static int dsps_powerup(const struct subsys_desc *subsys)
 static void dsps_crash_shutdown(const struct subsys_desc *subsys)
 {
 	pr_debug("%s\n", __func__);
+	disable_irq_nosync(drv->wdog_irq);
 	dsps_crash_shutdown_g = 1;
 	smsm_change_state(SMSM_DSPS_STATE, SMSM_RESET, SMSM_RESET);
 }

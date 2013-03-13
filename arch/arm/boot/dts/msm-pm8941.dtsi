@@ -48,6 +48,24 @@
 			};
 		};
 
+		clkdiv@5b00 {
+			reg = <0x5b00 0x100>;
+			compatible = "qcom,qpnp-clkdiv";
+			qcom,cxo-freq = <19200000>;
+		};
+
+		clkdiv@5c00 {
+			reg = <0x5c00 0x100>;
+			compatible = "qcom,qpnp-clkdiv";
+			qcom,cxo-freq = <19200000>;
+		};
+
+		clkdiv@5d00 {
+			reg = <0x5d00 0x1000>;
+			compatible = "qcom,qpnp-clkdiv";
+			qcom,cxo-freq = <19200000>;
+		};
+
 		pm8941_gpios {
 			spmi-dev-container;
 			compatible = "qcom,qpnp-pin";
@@ -360,7 +378,18 @@
 				label = "usb_in";
 				qcom,channel-num = <0>;
 				qcom,decimation = <0>;
-				qcom,pre-div-channel-scaling = <20>;
+				qcom,pre-div-channel-scaling = <4>;
+				qcom,calibration-type = "absolute";
+				qcom,scale-function = <0>;
+				qcom,hw-settle-time = <0>;
+				qcom,fast-avg-setup = <0>;
+			};
+
+			chan@1 {
+				label = "dc_in";
+				qcom,channel-num = <1>;
+				qcom,decimation = <0>;
+				qcom,pre-div-channel-scaling = <4>;
 				qcom,calibration-type = "absolute";
 				qcom,scale-function = <0>;
 				qcom,hw-settle-time = <0>;
@@ -370,6 +399,28 @@
 			chan@2 {
 				label = "vchg_sns";
 				qcom,channel-num = <2>;
+				qcom,decimation = <0>;
+				qcom,pre-div-channel-scaling = <3>;
+				qcom,calibration-type = "absolute";
+				qcom,scale-function = <0>;
+				qcom,hw-settle-time = <0>;
+				qcom,fast-avg-setup = <0>;
+			};
+
+			chan@3 {
+				label = "spare1";
+				qcom,channel-num = <3>;
+				qcom,decimation = <0>;
+				qcom,pre-div-channel-scaling = <6>;
+				qcom,calibration-type = "absolute";
+				qcom,scale-function = <0>;
+				qcom,hw-settle-time = <0>;
+				qcom,fast-avg-setup = <0>;
+			};
+
+			chan@4 {
+				label = "spare2";
+				qcom,channel-num = <4>;
 				qcom,decimation = <0>;
 				qcom,pre-div-channel-scaling = <6>;
 				qcom,calibration-type = "absolute";
@@ -382,7 +433,7 @@
 				label = "vcoin";
 				qcom,channel-num = <5>;
 				qcom,decimation = <0>;
-				qcom,pre-div-channel-scaling = <3>;
+				qcom,pre-div-channel-scaling = <1>;
 				qcom,calibration-type = "absolute";
 				qcom,scale-function = <0>;
 				qcom,hw-settle-time = <0>;
@@ -393,7 +444,7 @@
 				label = "vbat_sns";
 				qcom,channel-num = <6>;
 				qcom,decimation = <0>;
-				qcom,pre-div-channel-scaling = <3>;
+				qcom,pre-div-channel-scaling = <1>;
 				qcom,calibration-type = "absolute";
 				qcom,scale-function = <0>;
 				qcom,hw-settle-time = <0>;
@@ -404,9 +455,20 @@
 				label = "vph_pwr";
 				qcom,channel-num = <7>;
 				qcom,decimation = <0>;
-				qcom,pre-div-channel-scaling = <3>;
+				qcom,pre-div-channel-scaling = <1>;
 				qcom,calibration-type = "absolute";
 				qcom,scale-function = <0>;
+				qcom,hw-settle-time = <0>;
+				qcom,fast-avg-setup = <0>;
+			};
+
+			chan@8 {
+				label = "die_temp";
+				qcom,channel-num = <8>;
+				qcom,decimation = <0>;
+				qcom,pre-div-channel-scaling = <0>;
+				qcom,calibration-type = "absolute";
+				qcom,scale-function = <3>;
 				qcom,hw-settle-time = <0>;
 				qcom,fast-avg-setup = <0>;
 			};
@@ -415,7 +477,7 @@
 				label = "ref_625mv";
 				qcom,channel-num = <9>;
 				qcom,decimation = <0>;
-				qcom,pre-div-channel-scaling = <1>;
+				qcom,pre-div-channel-scaling = <0>;
 				qcom,calibration-type = "absolute";
 				qcom,scale-function = <0>;
 				qcom,hw-settle-time = <0>;
@@ -423,12 +485,45 @@
 			};
 
 			chan@10 {
-				label = "ref_1125v";
+				label = "ref_1250v";
 				qcom,channel-num = <10>;
 				qcom,decimation = <0>;
-				qcom,pre-div-channel-scaling = <1>;
+				qcom,pre-div-channel-scaling = <0>;
 				qcom,calibration-type = "absolute";
 				qcom,scale-function = <0>;
+				qcom,hw-settle-time = <0>;
+				qcom,fast-avg-setup = <0>;
+			};
+
+			chan@48 {
+				label = "batt_therm";
+				qcom,channel-num = <48>;
+				qcom,decimation = <0>;
+				qcom,pre-div-channel-scaling = <0>;
+				qcom,calibration-type = "ratiometric";
+				qcom,scale-function = <1>;
+				qcom,hw-settle-time = <0>;
+				qcom,fast-avg-setup = <0>;
+			};
+
+			chan@49 {
+				label = "batt_id";
+				qcom,channel-num = <49>;
+				qcom,decimation = <0>;
+				qcom,pre-div-channel-scaling = <0>;
+				qcom,calibration-type = "ratiometric";
+				qcom,scale-function = <0>;
+				qcom,hw-settle-time = <0>;
+				qcom,fast-avg-setup = <0>;
+			};
+
+			chan@50 {
+				label = "xo_therm1";
+				qcom,channel-num = <49>;
+				qcom,decimation = <0>;
+				qcom,pre-div-channel-scaling = <0>;
+				qcom,calibration-type = "ratiometric";
+				qcom,scale-function = <4>;
 				qcom,hw-settle-time = <0>;
 				qcom,fast-avg-setup = <0>;
 			};
@@ -732,5 +827,66 @@
 			compatible = "qcom,qpnp-regulator";
 			status = "disabled";
 		};
+
+		qcom,leds@d800 {
+			compatible = "qcom,leds-qpnp";
+			reg = <0xd800 0x100>;
+			qcom,label = "wled";
+		};
+
+		qcom,leds@d900 {
+			compatible = "qcom,leds-qpnp";
+			reg = <0xd900 0x100>;
+			qcom,label = "wled";
+		};
+
+		qcom,leds@da00 {
+			compatible = "qcom,leds-qpnp";
+			reg = <0xda00 0x100>;
+			qcom,label = "wled";
+		};
+
+		qcom,leds@db00 {
+			compatible = "qcom,leds-qpnp";
+			reg = <0xdb00 0x100>;
+			qcom,label = "wled";
+		};
+
+		qcom,leds@dc00 {
+			compatible = "qcom,leds-qpnp";
+			reg = <0xdc00 0x100>;
+			qcom,label = "wled";
+		};
+
+		qcom,leds@dd00 {
+			compatible = "qcom,leds-qpnp";
+			reg = <0xdd00 0x100>;
+			qcom,label = "wled";
+		};
+
+		qcom,leds@de00 {
+			compatible = "qcom,leds-qpnp";
+			reg = <0xde00 0x100>;
+			qcom,label = "wled";
+		};
+
+		qcom,leds@df00 {
+			compatible = "qcom,leds-qpnp";
+			reg = <0xdf00 0x100>;
+			qcom,label = "wled";
+		};
+
+		qcom,leds@e000 {
+			compatible = "qcom,leds-qpnp";
+			reg = <0xe000 0x100>;
+			qcom,label = "wled";
+		};
+
+		qcom,leds@e100 {
+			compatible = "qcom,leds-qpnp";
+			reg = <0xe100 0x100>;
+			qcom,label = "wled";
+		};
+
 	};
 };

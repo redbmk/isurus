@@ -89,6 +89,8 @@ static const char driver_name [] = "usbnet";
 
 static struct workqueue_struct	*usbnet_wq;
 
+static DECLARE_WAIT_QUEUE_HEAD(unlink_wakeup);
+
 /* use ethtool to change the level for any given device */
 static int msg_level = -1;
 module_param (msg_level, int, 0);
@@ -159,6 +161,13 @@ int usbnet_get_endpoints(struct usbnet *dev, struct usb_interface *intf)
 	dev->out = usb_sndbulkpipe (dev->udev,
 			out->desc.bEndpointAddress & USB_ENDPOINT_NUMBER_MASK);
 	dev->status = status;
+#ifdef LG_FW_HSIC_EMS_DEBUG /* secheol.pyo - endpoint logging */
+	printk("[%s] usbnet bulk_in_Addr = %d, bulk_out_Addr = %d,  bulk_in_endpoint = %d , bulk_out_endpoint = %d \n", __func__,
+		in->desc.bEndpointAddress,
+		out->desc.bEndpointAddress,
+		in->desc.bEndpointAddress & USB_ENDPOINT_NUMBER_MASK,
+		out->desc.bEndpointAddress & USB_ENDPOINT_NUMBER_MASK);
+#endif /* secheol.pyo - endpoint logging */
 	return 0;
 }
 EXPORT_SYMBOL_GPL(usbnet_get_endpoints);
@@ -664,7 +673,6 @@ EXPORT_SYMBOL_GPL(usbnet_unlink_rx_urbs);
 // precondition: never called in_interrupt
 static void usbnet_terminate_urbs(struct usbnet *dev)
 {
-	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(unlink_wakeup);
 	DECLARE_WAITQUEUE(wait, current);
 	int temp;
 
@@ -1240,7 +1248,7 @@ static void usbnet_bh (unsigned long param)
 	// waiting for all pending urbs to complete?
 	if (dev->wait) {
 		if ((dev->txq.qlen + dev->rxq.qlen + dev->done.qlen) == 0) {
-			wake_up (dev->wait);
+			wake_up(&unlink_wakeup);
 		}
 
 	// or are we maybe short a few urbs?
@@ -1528,6 +1536,7 @@ int usbnet_suspend (struct usb_interface *intf, pm_message_t message)
 		spin_lock_irq(&dev->txq.lock);
 		/* don't autosuspend while transmitting */
 		if (dev->txq.qlen && PMSG_IS_AUTO(message)) {
+			dev->suspend_count--;
 			spin_unlock_irq(&dev->txq.lock);
 			return -EBUSY;
 		} else {

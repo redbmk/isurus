@@ -262,6 +262,8 @@ static void ksb_tomdm_work(struct work_struct *w)
 			return;
 		}
 
+		usb_free_urb(urb);
+
 		spin_lock_irqsave(&ksb->lock, flags);
 	}
 	spin_unlock_irqrestore(&ksb->lock, flags);
@@ -441,8 +443,13 @@ static void ksb_rx_cb(struct urb *urb)
 
 	pr_debug("status:%d actual:%d", urb->status, urb->actual_length);
 
+	/*non zero len of data received while unlinking urb*/
+	if (urb->status == -ENOENT && urb->actual_length > 0)
+		goto add_to_list;
+
 	if (urb->status < 0) {
-		if (urb->status != -ESHUTDOWN && urb->status != -ENOENT)
+		if (urb->status != -ESHUTDOWN && urb->status != -ENOENT
+				&& urb->status != -EPROTO)
 			pr_err_ratelimited("urb failed with err:%d",
 					urb->status);
 		ksb_free_data_pkt(pkt);
@@ -456,6 +463,7 @@ static void ksb_rx_cb(struct urb *urb)
 		goto resubmit_urb;
 	}
 
+add_to_list:
 	spin_lock(&ksb->lock);
 	pkt->len = urb->actual_length;
 	list_add_tail(&pkt->list, &ksb->to_ks_list);
@@ -546,6 +554,7 @@ ksb_usb_probe(struct usb_interface *ifc, const struct usb_device_id *id)
 		if (ifc_num != 2)
 			return -ENODEV;
 		ksb = __ksb[EFS_BRIDGE_INDEX];
+        ifc->needs_remote_wakeup = 1;
 		break;
 	default:
 		return -ENODEV;
@@ -601,7 +610,7 @@ static int ksb_usb_suspend(struct usb_interface *ifc, pm_message_t message)
 
 	dbg_log_event(ksb, "SUSPEND", 0, 0);
 
-	pr_info("read cnt: %d", ksb->alloced_read_pkts);
+	pr_debug("read cnt: %d", ksb->alloced_read_pkts);
 
 	usb_kill_anchored_urbs(&ksb->submitted);
 
@@ -650,6 +659,7 @@ static void ksb_usb_disconnect(struct usb_interface *ifc)
 	spin_unlock_irqrestore(&ksb->lock, flags);
 
 	misc_deregister(ksb->fs_dev);
+	ifc->needs_remote_wakeup = 0;
 	usb_put_dev(ksb->udev);
 	ksb->ifc = NULL;
 	usb_set_intfdata(ifc, NULL);

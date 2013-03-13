@@ -15,7 +15,7 @@
 #include <linux/platform_device.h>
 #include <linux/regulator/machine.h>
 #include <linux/regulator/consumer.h>
-#include <linux/ion.h>
+#include <linux/msm_ion.h>
 #include <mach/irqs.h>
 #include <mach/dma.h>
 #include <asm/mach/mmc.h>
@@ -1733,7 +1733,7 @@ static void __init msm_register_device(struct platform_device *pdev, void *data)
 			  __func__, ret);
 }
 
-static struct platform_device msm_lcdc_device = {
+struct platform_device msm_lcdc_device = {
 	.name   = "lcdc",
 	.id     = 0,
 };
@@ -3001,26 +3001,6 @@ struct platform_device msm8660_rpm_device = {
 };
 
 struct msm_iommu_domain_name msm8660_iommu_ctx_names[] = {
-	/* Camera */
-	{
-		.name = "vpe_src",
-		.domain = CAMERA_DOMAIN,
-	},
-	/* Camera */
-	{
-		.name = "vpe_dst",
-		.domain = CAMERA_DOMAIN,
-	},
-	/* Camera */
-	{
-		.name = "vfe_imgwr",
-		.domain = CAMERA_DOMAIN,
-	},
-	/* Camera */
-	{
-		.name = "vfe_misc",
-		.domain = CAMERA_DOMAIN,
-	},
 	/* Camera */
 	{
 		.name = "ijpeg_src",

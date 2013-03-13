@@ -64,6 +64,7 @@
 
 #define MSM_GPIO_I2C_CLK 16
 #define MSM_GPIO_I2C_SDA 17
+#define MSM9615_RPM_MASTER_STATS_BASE	0x10A700
 
 static struct msm_watchdog_pdata msm_watchdog_pdata = {
 	.pet_time = 10000,
@@ -174,25 +175,25 @@ static struct resource resources_hsusb[] = {
 
 static struct resource resources_usb_bam[] = {
 	{
-		.name	= "usb_bam_addr",
+		.name	= "hsusb",
 		.start	= MSM_USB_BAM_BASE,
 		.end	= MSM_USB_BAM_BASE + MSM_USB_BAM_SIZE - 1,
 		.flags	= IORESOURCE_MEM,
 	},
 	{
-		.name	= "usb_bam_irq",
+		.name	= "hsusb",
 		.start	= USB1_HS_BAM_IRQ,
 		.end	= USB1_HS_BAM_IRQ,
 		.flags	= IORESOURCE_IRQ,
 	},
 	{
-		.name	= "hsic_bam_addr",
+		.name	= "hsic",
 		.start	= MSM_HSIC_BAM_BASE,
 		.end	= MSM_HSIC_BAM_BASE + MSM_HSIC_BAM_SIZE - 1,
 		.flags	= IORESOURCE_MEM,
 	},
 	{
-		.name	= "hsic_bam_irq",
+		.name	= "hsic",
 		.start	= USB_HSIC_BAM_IRQ,
 		.end	= USB_HSIC_BAM_IRQ,
 		.flags	= IORESOURCE_IRQ,
@@ -1325,6 +1326,35 @@ struct platform_device msm9615_rpm_stat_device = {
 	.id = -1,
 	.dev = {
 		.platform_data = &msm_rpm_stat_pdata,
+	},
+};
+
+static struct resource resources_rpm_master_stats[] = {
+	{
+		.start	= MSM9615_RPM_MASTER_STATS_BASE,
+		.end	= MSM9615_RPM_MASTER_STATS_BASE + SZ_256,
+		.flags	= IORESOURCE_MEM,
+	},
+};
+
+static char *master_names[] = {
+	"KPSS",
+	"MPSS",
+	"LPASS",
+};
+
+static struct msm_rpm_master_stats_platform_data msm_rpm_master_stat_pdata = {
+	.masters = master_names,
+	.nomasters = ARRAY_SIZE(master_names),
+};
+
+struct platform_device msm9615_rpm_master_stat_device = {
+	.name = "msm_rpm_master_stat",
+	.id = -1,
+	.num_resources	= ARRAY_SIZE(resources_rpm_master_stats),
+	.resource	= resources_rpm_master_stats,
+	.dev = {
+		.platform_data = &msm_rpm_master_stat_pdata,
 	},
 };
 

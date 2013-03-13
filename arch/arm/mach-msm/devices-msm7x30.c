@@ -26,7 +26,7 @@
 #include <mach/dma.h>
 #include <mach/board.h>
 #include <asm/clkdev.h>
-#include <linux/ion.h>
+#include <linux/msm_ion.h>
 #include "devices.h"
 #include "footswitch.h"
 
@@ -1092,7 +1092,7 @@ static struct platform_device msm_ebi2_lcd_device = {
 	.resource       = msm_ebi2_lcd_resources,
 };
 
-static struct platform_device msm_lcdc_device = {
+struct platform_device msm_lcdc_device = {
 	.name   = "lcdc",
 	.id     = 0,
 };
@@ -1329,7 +1329,7 @@ static struct resource kgsl_2d0_resources[] = {
 static struct kgsl_device_platform_data kgsl_2d0_pdata = {
 	.pwrlevel = {
 		{
-			.gpu_freq = 192000000,
+			.gpu_freq = 0,
 			.bus_freq = 192000000,
 		},
 	},

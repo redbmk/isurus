@@ -45,14 +45,14 @@ static struct gpiomux_setting gsbi3_active_cfg = {
 
 static struct gpiomux_setting gsbi5 = {
 	.func = GPIOMUX_FUNC_1,
-	.drv = GPIOMUX_DRV_8MA,
-	.pull = GPIOMUX_PULL_NONE,
+	.drv = GPIOMUX_DRV_2MA,
+	.pull = GPIOMUX_PULL_DOWN,
 };
 
 static struct gpiomux_setting gsbi9 = {
 	.func = GPIOMUX_FUNC_2,
-	.drv = GPIOMUX_DRV_8MA,
-	.pull = GPIOMUX_PULL_NONE,
+	.drv = GPIOMUX_DRV_2MA,
+	.pull = GPIOMUX_PULL_DOWN,
 };
 
 static struct gpiomux_setting gsbi10 = {
@@ -69,7 +69,7 @@ static struct gpiomux_setting gsbi12 = {
 
 static struct gpiomux_setting cdc_mclk = {
 	.func = GPIOMUX_FUNC_1,
-	.drv = GPIOMUX_DRV_8MA,
+	.drv = GPIOMUX_DRV_2MA,
 	.pull = GPIOMUX_PULL_NONE,
 };
 
@@ -96,14 +96,20 @@ static struct gpiomux_setting audio_mbhc = {
 
 static struct gpiomux_setting audio_spkr_boost = {
 	.func = GPIOMUX_FUNC_GPIO,
-	.drv = GPIOMUX_DRV_8MA,
-	.pull = GPIOMUX_PULL_NONE,
+	.drv = GPIOMUX_DRV_2MA,
+	.pull = GPIOMUX_PULL_DOWN,
 };
 
 #if defined(CONFIG_KS8851) || defined(CONFIG_KS8851_MODULE)
-static struct gpiomux_setting gpio_eth_config = {
+static struct gpiomux_setting gpio_eth_suspend_1_cfg = {
+	.pull = GPIOMUX_PULL_DOWN,
+	.drv = GPIOMUX_DRV_2MA,
+	.func = GPIOMUX_FUNC_GPIO,
+};
+
+static struct gpiomux_setting gpio_eth_suspend_2_cfg = {
 	.pull = GPIOMUX_PULL_NONE,
-	.drv = GPIOMUX_DRV_8MA,
+	.drv = GPIOMUX_DRV_2MA,
 	.func = GPIOMUX_FUNC_GPIO,
 };
 #endif
@@ -274,18 +280,25 @@ static struct gpiomux_setting hdmi_active_5_cfg = {
 
 #endif
 
+static struct gpiomux_setting sitar_reset = {
+	.func = GPIOMUX_FUNC_GPIO,
+	.drv = GPIOMUX_DRV_6MA,
+	.pull = GPIOMUX_PULL_NONE,
+	.dir = GPIOMUX_OUT_LOW,
+};
+
 #if defined(CONFIG_KS8851) || defined(CONFIG_KS8851_MODULE)
 static struct msm_gpiomux_config msm8960_ethernet_configs[] = {
 	{
-		.gpio = 90,
+		.gpio = 89,
 		.settings = {
-			[GPIOMUX_SUSPENDED] = &gpio_eth_config,
+			[GPIOMUX_SUSPENDED] = &gpio_eth_suspend_1_cfg,
 		}
 	},
 	{
-		.gpio = 89,
+		.gpio = 90,
 		.settings = {
-			[GPIOMUX_SUSPENDED] = &gpio_eth_config,
+			[GPIOMUX_SUSPENDED] = &gpio_eth_suspend_2_cfg,
 		}
 	},
 };
@@ -704,6 +717,15 @@ static struct msm_gpiomux_config msm8930_gyro_int_config[] __initdata = {
 	},
 };
 
+static struct msm_gpiomux_config msm_sitar_config[] __initdata = {
+	{
+		.gpio   = 42,           /* SYS_RST_N */
+		.settings = {
+			[GPIOMUX_SUSPENDED] = &sitar_reset,
+		},
+	}
+};
+
 int __init msm8930_init_gpiomux(void)
 {
 	int rc = msm_gpiomux_init(NR_GPIO_IRQS);
@@ -763,7 +785,7 @@ int __init msm8930_init_gpiomux(void)
 #ifdef CONFIG_FB_MSM_HDMI_MSM_PANEL
 	msm_gpiomux_install(msm8960_hdmi_configs,
 			ARRAY_SIZE(msm8960_hdmi_configs));
-	if (machine_is_msm8930_fluid())
+	if (msm8930_mhl_display_enabled())
 		msm_gpiomux_install(msm8930_mhl_configs,
 				ARRAY_SIZE(msm8930_mhl_configs));
 #endif
@@ -777,6 +799,8 @@ int __init msm8930_init_gpiomux(void)
 	if (machine_is_msm8930_fluid() || machine_is_msm8930_mtp())
 		msm_gpiomux_install(msm8930_gyro_int_config,
 			ARRAY_SIZE(msm8930_gyro_int_config));
+
+	msm_gpiomux_install(msm_sitar_config, ARRAY_SIZE(msm_sitar_config));
 
 	return 0;
 }

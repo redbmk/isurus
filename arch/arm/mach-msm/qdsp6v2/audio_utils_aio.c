@@ -21,7 +21,7 @@
 #include <linux/wait.h>
 #include <linux/dma-mapping.h>
 #include <linux/slab.h>
-#include <asm/atomic.h>
+#include <linux/atomic.h>
 #include <asm/ioctls.h>
 #include <linux/debugfs.h>
 #include "audio_utils_aio.h"
@@ -91,39 +91,6 @@ static int insert_meta_data_flush(struct q6audio_aio *audio,
 	meta_data->meta_out_dsp[0].nflags = 0x0;
 	return sizeof(struct dec_meta_out) +
 		sizeof(meta_data->meta_out_dsp[0]);
-}
-
-void extract_meta_out_info(struct q6audio_aio *audio,
-		struct audio_aio_buffer_node *buf_node, int dir)
-{
-	struct dec_meta_out *meta_data = buf_node->kvaddr;
-	if (dir) { /* input buffer - Write */
-		if (audio->buf_cfg.meta_info_enable)
-			memcpy(&buf_node->meta_info.meta_in,
-			(char *)buf_node->kvaddr, sizeof(struct dec_meta_in));
-		else
-			memset(&buf_node->meta_info.meta_in,
-			0, sizeof(struct dec_meta_in));
-		pr_debug("%s[%p]:i/p: msw_ts 0x%lx lsw_ts 0x%lx nflags 0x%8x\n",
-			__func__, audio,
-			buf_node->meta_info.meta_in.ntimestamp.highpart,
-			buf_node->meta_info.meta_in.ntimestamp.lowpart,
-			buf_node->meta_info.meta_in.nflags);
-	} else { /* output buffer - Read */
-		memcpy((char *)buf_node->kvaddr,
-			&buf_node->meta_info.meta_out,
-			sizeof(struct dec_meta_out));
-		meta_data->meta_out_dsp[0].nflags = 0x00000000;
-		pr_debug("%s[%p]:o/p: msw_ts 0x%8x lsw_ts 0x%8x nflags 0x%8x, num_frames = %d\n",
-		__func__, audio,
-		((struct dec_meta_out *)buf_node->kvaddr)->\
-			meta_out_dsp[0].msw_ts,
-		((struct dec_meta_out *)buf_node->kvaddr)->\
-			meta_out_dsp[0].lsw_ts,
-		((struct dec_meta_out *)buf_node->kvaddr)->\
-			meta_out_dsp[0].nflags,
-		((struct dec_meta_out *)buf_node->kvaddr)->num_of_frames);
-	}
 }
 
 static int audio_aio_ion_lookup_vaddr(struct q6audio_aio *audio, void *addr,
@@ -198,7 +165,7 @@ static unsigned long audio_aio_ion_fixup(struct q6audio_aio *audio, void *addr,
 
 static int audio_aio_pause(struct q6audio_aio  *audio)
 {
-	int rc = 0;
+	int rc = -EINVAL;
 
 	pr_debug("%s[%p], enabled = %d\n", __func__, audio,
 			audio->enabled);
@@ -468,8 +435,8 @@ int audio_aio_release(struct inode *inode, struct file *file)
 	audio->wflush = 0;
 	audio->drv_ops.out_flush(audio);
 	audio->drv_ops.in_flush(audio);
-	audio_aio_unmap_ion_region(audio);
 	audio_aio_disable(audio);
+	audio_aio_unmap_ion_region(audio);
 	audio_aio_reset_ion_region(audio);
 	ion_client_destroy(audio->client);
 	audio->event_abort = 1;
@@ -806,6 +773,8 @@ static void audio_aio_async_write(struct q6audio_aio *audio,
 		__func__, audio, buf_node, buf_node->paddr,
 		buf_node->buf.data_len,
 		audio->buf_cfg.meta_info_enable);
+	pr_debug("%s[%p]: flags = 0x%x\n", __func__, audio,
+		buf_node->meta_info.meta_in.nflags);
 
 	ac = audio->ac;
 	/* Offset with  appropriate meta */
@@ -825,6 +794,11 @@ static void audio_aio_async_write(struct q6audio_aio *audio,
 		param.flags = 0;
 	else
 		param.flags = 0xFF00;
+
+	if ((buf_node != NULL) &&
+		(buf_node->meta_info.meta_in.nflags & AUDIO_DEC_EOF_SET))
+		param.flags |= AUDIO_DEC_EOF_SET;
+
 	param.uid = param.paddr;
 	/* Read command will populate paddr as token */
 	buf_node->token = param.paddr;
@@ -1163,9 +1137,12 @@ long audio_aio_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		mutex_lock(&audio->lock);
 		if (arg == 1) {
 			rc = audio_aio_pause(audio);
-			if (rc < 0)
+			if (rc < 0) {
 				pr_err("%s[%p]: pause FAILED rc=%d\n",
 					__func__, audio, rc);
+				mutex_unlock(&audio->lock);
+				break;
+			}
 			audio->drv_status |= ADRV_STATUS_PAUSE;
 		} else if (arg == 0) {
 			if (audio->drv_status & ADRV_STATUS_PAUSE) {

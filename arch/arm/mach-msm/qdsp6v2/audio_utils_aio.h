@@ -24,7 +24,7 @@
 #include <linux/debugfs.h>
 #include <linux/list.h>
 #include <linux/slab.h>
-#include <linux/ion.h>
+#include <linux/msm_ion.h>
 #include <asm/ioctls.h>
 #include <asm/atomic.h>
 #include "q6audio_common.h"
@@ -36,6 +36,7 @@
 #define ADRV_STATUS_FSYNC 0x00000008
 #define ADRV_STATUS_PAUSE 0x00000010
 #define AUDIO_DEC_EOS_SET  0x00000001
+#define AUDIO_DEC_EOF_SET  0x00000010
 #define AUDIO_EVENT_NUM		10
 
 #define __CONTAINS(r, v, l) ({                                  \

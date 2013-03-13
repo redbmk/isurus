@@ -22,6 +22,10 @@
 #include "idle.h"
 #include "idle-macros.S"
 
+//LGE_UPDATE_S, 2012-08-10, fixed to tz crash while save and restore register for JTAG in idle_power_collapse
+#undef CONFIG_MSM_JTAG
+//LGE_UPDATE_E, 2012-08-10, fixed to tz crash while save and restore register for JTAG in idle_power_collapse
+
 #ifdef CONFIG_ARCH_MSM_KRAIT
 #define SCM_SVC_BOOT 0x1
 #define SCM_CMD_TERMINATE_PC 0x2
@@ -245,6 +249,7 @@ msm_pm_pa_to_va:
 	isb
 
 #ifdef CONFIG_ARCH_MSM_KRAIT
+	SET_SMP_COHERENCY ON
 	mrc	p15, 0, r1, c0, c0, 0
 	ldr	r3, =0xff00fc00
 	and	r3, r1, r3
@@ -286,9 +291,14 @@ ENTRY(msm_pm_boot_entry)
 	ldr     pc, [r1]                 /* jump                           */
 
 ENTRY(msm_pm_set_l2_flush_flag)
-	ldr r1, =msm_pm_flush_l2_flag
-	str r0, [r1]
-	bx lr
+	ldr     r1, =msm_pm_flush_l2_flag
+	str     r0, [r1]
+	bx      lr
+
+ENTRY(msm_pm_get_l2_flush_flag)
+	ldr     r1, =msm_pm_flush_l2_flag
+	ldr     r0, [r1]
+	bx      lr
 
 	.data
 
