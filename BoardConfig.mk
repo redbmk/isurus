@@ -39,7 +39,7 @@ BOARD_KERNEL_CMDLINE := console=ttySHL0,115200,n8 androidboot.hardware=isurus lp
 BOARD_MKBOOTIMG_ARGS := --ramdisk_offset 0x02000000
 
 # Try to build the kernel
-TARGET_KERNEL_CONFIG := j1sp_defconfig
+TARGET_KERNEL_CONFIG := j1sp_perf-defconfig
 
 BOARD_USES_ALSA_AUDIO:= true
 BOARD_USES_FLUENCE_INCALL := true
