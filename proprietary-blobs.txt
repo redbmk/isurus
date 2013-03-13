@@ -17,6 +17,7 @@
 /system/bin/ATFWD-daemon
 /system/bin/bridgemgrd
 /system/bin/btnvtool
+/system/bin/diag_mdlog
 /system/bin/ds_fmc_appd
 /system/bin/efsks
 /system/bin/hci_qcomm_init
@@ -70,8 +71,9 @@
 /system/lib/libC2D2.so
 /system/lib/libc2d2_a3xx.so
 /system/lib/libc2d2_z180.so
-#/system/lib/libcamera_client.so might be needed
-#/system/lib/libcameraservice.so might be needed
+/system/lib/libcamera_fast_af.so
+/system/lib/libcamera_client.so
+/system/lib/libcameraservice.so
 /system/lib/libchromatix_imx074_default_video.so
 /system/lib/libchromatix_imx074_preview.so
 /system/lib/libchromatix_imx074_video_hd.so
@@ -86,11 +88,19 @@
 /system/lib/libchromatix_imx119_default_video.so
 /system/lib/libchromatix_imx119_preview.so
 /system/lib/libchromatix_imx119_vt.so
+/system/lib/libchromatix_mt9e013_default_video.so
+/system/lib/libchromatix_mt9e013_preview.so
+/system/lib/libchromatix_mt9e013_video_hfr.so
+/system/lib/libchromatix_ov5647_default_video.so
 /system/lib/libchromatix_ov2720_default_video.so
 /system/lib/libchromatix_ov2720_hfr.so
 /system/lib/libchromatix_ov2720_preview.so
 /system/lib/libchromatix_ov2720_zsl.so
 /system/lib/libchromatix_ov5647_preview.so
+/system/lib/libchromatix_ov8825_default_video.so
+/system/lib/libchromatix_ov8825_preview.so
+/system/lib/libchromatix_ov9726_default_video.so
+/system/lib/libchromatix_ov9726_preview.so
 /system/lib/libchromatix_s5k3l1yx_default_video.so
 /system/lib/libchromatix_s5k3l1yx_hfr_120fps.so
 /system/lib/libchromatix_s5k3l1yx_hfr_60fps.so
@@ -129,7 +139,7 @@
 /system/lib/libmmcamera_frameproc.so
 /system/lib/libmmcamera_hdr_lib.so
 /system/lib/libmmcamera_image_stab.so
-#/system/lib/libmmcamera_interface2.so might be needed
+/system/lib/libmmcamera_interface2.so
 /system/lib/libmmcamera_statsproc31.so
 /system/lib/libmmcamera_wavelet_lib.so
 /system/lib/libmmipl.so
@@ -166,6 +176,7 @@
 /system/lib/libsensor_user_cal.so
 /system/lib/libxml.so
 /system/lib/lib_dlb_msd.so
+/system/vendor/lib/libdrmdecrypt.so
 /system/vendor/lib/libWVStreamControlAPI_L1.so
 /system/vendor/lib/libwvm.so
 /system/vendor/lib/libwvdrm_L1.so
