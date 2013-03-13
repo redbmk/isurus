@@ -22,7 +22,6 @@
 /system/bin/efsks
 /system/bin/hci_qcomm_init
 /system/bin/ks
-/system/bin/mm-audio-send-cal
 /system/bin/mm-qcamera-daemon
 /system/bin/mpdecision
 /system/bin/netmgrd
@@ -53,8 +52,6 @@
 /system/etc/firmware/vidc.mdt
 /system/etc/firmware/vidcfw.elf
 /system/etc/firmware/vidc_1080p.fw
-/system/etc/firmware/wcd9310/wcd9310_anc.bin
-/system/etc/firmware/wcd9310/wcd9310_mbhc.bin
 /system/lib/egl/eglsubAndroid.so
 /system/lib/egl/libEGL_adreno200.so
 /system/lib/egl/libGLESv1_CM_adreno200.so
@@ -71,7 +68,6 @@
 /system/lib/libC2D2.so
 /system/lib/libc2d2_a3xx.so
 /system/lib/libc2d2_z180.so
-/system/lib/libcamera_fast_af.so
 /system/lib/libcamera_client.so
 /system/lib/libcameraservice.so
 /system/lib/libchromatix_imx074_default_video.so
